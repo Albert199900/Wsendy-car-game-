@@ -2,285 +2,405 @@
 <html lang="sw">
 <head>
 <meta charset="UTF-8">
-<title>GTA STYLE FULL GAME - 3D UPGRADE</title>
-
+<title>Mchezo wa Gari - 3D</title>
 <style>
-body { margin:0; overflow:hidden; font-family:Arial; }
+body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 
-#ui{
-    position:absolute;
-    top:10px; left:10px;
-    background:rgba(0,0,0,0.6);
-    color:white;
-    padding:10px;
-    border-radius:8px;
+/* UI ya Kawaida (Alama na Spidi) */
+#ui {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 15px;
+    border-radius: 8px;
+    pointer-events: none;
+    z-index: 10;
 }
+#score { font-size: 1.2em; margin-bottom: 5px; font-weight: bold; }
+#speed { font-size: 1em; color: #00ffcc; }
 
-button{
-    margin:4px;
-    padding:6px;
+/* Screen ya Kuanzia (Start Menu) */
+#start-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.75);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 200;
+    backdrop-filter: blur(5px); /* Inatia ukungu background */
+}
+#start-screen h1 {
+    color: white;
+    font-size: 4em;
+    margin-bottom: 20px;
+    text-shadow: 2px 2px 5px rgba(0,0,0,0.8);
+    text-align: center;
+}
+#start-screen button {
+    padding: 15px 40px;
+    font-size: 1.5em;
+    font-weight: bold;
     cursor: pointer;
+    background: #ff4444;
+    color: white;
+    border: 3px solid #cc0000;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    transition: all 0.2s;
 }
+#start-screen button:hover {
+    background: #ff6666;
+    transform: scale(1.05);
+}
+
+/* Screen ya Game Over */
+#game-over-screen {
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.85);
+    color: #ff4444;
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: 3em;
+    font-weight: bold;
+    z-index: 100;
+}
+#game-over-screen button {
+    margin-top: 20px;
+    padding: 10px 30px;
+    font-size: 0.5em;
+    cursor: pointer;
+    background: #44ff44;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+}
+#game-over-screen button:hover { background: #66ff66; }
 </style>
 </head>
-
 <body>
 
 <div id="ui">
-    <p id="score">Score: 0</p>
-    <p id="mission">Mission: Collect Coins</p>
+    <div id="score">Score: 0</div>
+    <div id="speed">Speed: 0 km/h</div>
+</div>
 
-    <button onclick="share()">📲 Share</button>
-    <button onclick="saveGame()">💾 Save</button>
-    <button onclick="loadGame()">📂 Load</button>
+<div id="start-screen">
+    <h1>Mbio za Nyikani 3D</h1>
+    <button onclick="startGame()">▶ CHEZA SASA</button>
+</div>
+
+<div id="game-over-screen">
+    UMEKAMATWA! (GAME OVER)
+    <button onclick="resetGame()">↻ Cheza Tena</button>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
+let scene, camera, renderer, player, road;
+let gameOver = false;
+let gameStarted = false; /* Variable mpya ya kuzuia game lisiende mpaka ubonyeze play */
 
-let scene, camera, renderer;
-let player;
-
+let obstacles = [];
+let trees = [];
+let mountains = [];
 let speed = 0;
 let score = 0;
-let coinsCollected = 0;
 
-let police = [];
-let coins = [];
-let ads = [];
-let trees = [];
+const maxSpeed = 0.5;
+const playerLaneWidth = 4;
+const totalLanes = 3;
+const playerMovementSpeed = 0.15;
 
-let missions = [
-    {target:10, reward:100}
-];
-
-let currentMission = 0;
+const scoreElement = document.getElementById("score");
+const speedElement = document.getElementById("speed");
+const gameOverScreen = document.getElementById("game-over-screen");
+const startScreen = document.getElementById("start-screen");
 
 /* ================= INIT ================= */
 init();
 animate();
 
-function init(){
-
+function init() {
     scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x87ceeb); // Anga la bluu
+    scene.background = new THREE.Color(0x87ceeb);
+    scene.fog = new THREE.Fog(0x87ceeb, 50, 150);
 
-    camera = new THREE.PerspectiveCamera(75, innerWidth/innerHeight, 0.1, 1000);
+    camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.1, 1000);
+    camera.position.set(0, 5, 10);
+    camera.lookAt(0, 0, -5);
 
-    renderer = new THREE.WebGLRenderer({antialias:true});
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(innerWidth, innerHeight);
+    renderer.shadowMap.enabled = true;
     document.body.appendChild(renderer.domElement);
 
-    /* MWANGA (LIGHTING - Muhimu kwa 3D halisi) */
+    /* MWANGA */
     scene.add(new THREE.AmbientLight(0xffffff, 0.6));
-    let dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    dirLight.position.set(50, 100, 50);
-    scene.add(dirLight);
+    let sunLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    sunLight.position.set(10, 20, 15);
+    sunLight.castShadow = true;
+    scene.add(sunLight);
 
-    /* ARDHI YENYE NYASI (GRASS GROUND) */
-    let ground = new THREE.Mesh(
-        new THREE.PlaneGeometry(500, 2000),
-        new THREE.MeshLambertMaterial({color: 0x2d8a2d}) // Kijani
+    /* BARABARA */
+    road = new THREE.Mesh(
+        new THREE.PlaneGeometry(12, 1000),
+        new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.8 })
     );
-    ground.rotation.x = -Math.PI/2;
-    ground.position.z = -500;
-    scene.add(ground);
-
-    /* BARABARA (ROAD) */
-    let road = new THREE.Mesh(
-        new THREE.PlaneGeometry(12, 2000),
-        new THREE.MeshLambertMaterial({color: 0x333333}) // Kijivu cheusi
-    );
-    road.rotation.x = -Math.PI/2;
-    road.position.y = 0.05; // Juu kidogo ya nyasi
-    road.position.z = -500;
+    road.rotation.x = -Math.PI / 2;
+    road.receiveShadow = true;
     scene.add(road);
 
-    /* GARI LA MCHEZAJI (3D PLAYER CAR) */
+    /* MISTARI YA BARABARA */
+    const lineMaterial = new THREE.MeshStandardMaterial({ color: 0xffffff });
+    const lineGeometry = new THREE.PlaneGeometry(0.2, 5);
+    for (let i = 0; i < 20; i++) {
+        const lineLeft = new THREE.Mesh(lineGeometry, lineMaterial);
+        lineLeft.rotation.x = -Math.PI / 2;
+        lineLeft.position.set(-2, 0.01, -i * 10);
+        scene.add(lineLeft);
+
+        const lineRight = new THREE.Mesh(lineGeometry, lineMaterial);
+        lineRight.rotation.x = -Math.PI / 2;
+        lineRight.position.set(2, 0.01, -i * 10);
+        scene.add(lineRight);
+    }
+
+    /* GARI (PLAYER) */
     player = new THREE.Group();
-
-    // Bodi ya gari (Chassis)
-    let chassis = new THREE.Mesh(
-        new THREE.BoxGeometry(2, 0.5, 4),
-        new THREE.MeshLambertMaterial({color: 0xcc0000}) // Nyekundu
+    // Bodi
+    const body = new THREE.Mesh(
+        new THREE.BoxGeometry(1.8, 1, 4),
+        new THREE.MeshStandardMaterial({ color: 0xff4444, metalness: 0.6, roughness: 0.4 })
     );
-    chassis.position.y = 0.5;
-    player.add(chassis);
-
-    // Kichwa/Kioo (Cabin)
-    let cabin = new THREE.Mesh(
-        new THREE.BoxGeometry(1.5, 0.6, 2),
-        new THREE.MeshLambertMaterial({color: 0x880000})
+    body.position.y = 0.6;
+    body.castShadow = true;
+    player.add(body);
+    // Vioo
+    const cabin = new THREE.Mesh(
+        new THREE.BoxGeometry(1.5, 0.7, 2),
+        new THREE.MeshStandardMaterial({ color: 0x111111, transparent: true, opacity: 0.8 })
     );
-    cabin.position.set(0, 1.05, -0.2);
+    cabin.position.set(0, 1.3, -0.3);
+    cabin.castShadow = true;
     player.add(cabin);
-
-    // Matairi (Wheels)
-    let wheelGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
-    let wheelMat = new THREE.MeshLambertMaterial({color: 0x111111});
-    
-    let positions = [
-        [1.1, 0.4, 1.2], [-1.1, 0.4, 1.2], // Matairi ya mbele
-        [1.1, 0.4, -1.2], [-1.1, 0.4, -1.2] // Matairi ya nyuma
+    // Magurudumu
+    const wheelGeometry = new THREE.CylinderGeometry(0.4, 0.4, 0.3, 16);
+    const wheelMaterial = new THREE.MeshStandardMaterial({ color: 0x111111 });
+    const wheelPositions = [
+        [-0.9, 0.4, 1.3], [0.9, 0.4, 1.3],
+        [-0.9, 0.4, -1.3], [0.9, 0.4, -1.3]
     ];
-
-    positions.forEach(pos => {
-        let wheel = new THREE.Mesh(wheelGeo, wheelMat);
+    wheelPositions.forEach(pos => {
+        const wheel = new THREE.Mesh(wheelGeometry, wheelMaterial);
         wheel.rotation.z = Math.PI / 2;
-        wheel.position.set(pos[0], pos[1], pos[2]);
+        wheel.position.set(...pos);
         player.add(wheel);
     });
-
     scene.add(player);
 
-    /* WEKA MITI PEMBENI MWA BARABARA */
-    function createTree(x, z) {
-        let tree = new THREE.Group();
-        
-        // Shina (Trunk)
-        let trunk = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.3, 0.4, 2),
-            new THREE.MeshLambertMaterial({color: 0x5c4033})
-        );
-        trunk.position.y = 1;
-        tree.add(trunk);
+    /* MANDHARI */
+    createMountains();
+    createTrees();
+    createRocks();
+    createObstacles();
 
-        // Majani (Leaves)
-        let leaves = new THREE.Mesh(
-            new THREE.ConeGeometry(1.5, 3, 8),
-            new THREE.MeshLambertMaterial({color: 0x228b22})
-        );
-        leaves.position.y = 3;
-        tree.add(leaves);
-
-        tree.position.set(x, 0, z);
-        scene.add(tree);
-    }
-
-    for(let i=0; i<100; i++){
-        let zPos = Math.random() * -1000;
-        // Weka upande wa kushoto au kulia nje ya barabara
-        let xPos = Math.random() > 0.5 ? (Math.random() * 20 + 8) : (Math.random() * -20 - 8);
-        createTree(xPos, zPos);
-    }
-
-    /* POLISI (POLICE CARS) */
-    for(let i=0; i<5; i++){
-        let p = new THREE.Mesh(
-            new THREE.BoxGeometry(2, 1, 4),
-            new THREE.MeshLambertMaterial({color: 0x0000ff}) // Bluu
-        );
-        p.position.set(Math.random()*10-5, 0.5, Math.random()* -200 - 20);
-        scene.add(p);
-        police.push(p);
-    }
-
-    /* COINS (SARAFI) */
-    for(let i=0; i<30; i++){
-        let c = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.4, 0.4, 0.1, 16),
-            new THREE.MeshLambertMaterial({color: 0xffd700}) // Dhahabu
-        );
-        c.rotation.x = Math.PI/2; // Zisimame
-        c.position.set(Math.random()*10-5, 0.5, Math.random()* -300 - 10);
-        scene.add(c);
-        coins.push(c);
-    }
-
-    /* ADS */
-    ads = [
-        {id:"29084400", link:"https://oddlystudent.com/tu1ixct1?key=bf9ebe5967e8fa09c93394892db398f0"},
-        {id:"20280116", link:"https://oddlystudent.com/xtf00r92?key=d436ce47c2f2dbf92b6ed9434d9bf01e"}
-    ];
-
-    /* KEY CONTROL */
-    window.addEventListener("keydown", control);
+    /* UDHIBITI */
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("keyup", handleKeyUp);
+    window.addEventListener("resize", onWindowResize);
 }
 
-/* ================= CONTROLS ================= */
-function control(e){
-    if(e.key==="ArrowUp") speed += 0.05; // Imeongezwa spidi kidogo
-    if(e.key==="ArrowDown") speed -= 0.05;
-
-    // Kuzuia gari kwenda nyuma kupitiliza
-    if(speed < 0) speed = 0; 
-
-    if(e.key==="ArrowLeft") player.position.x -= 0.8;
-    if(e.key==="ArrowRight") player.position.x += 0.8;
+/* ================= FUNCTION YA KUANZA (START GAME) ================= */
+function startGame() {
+    startScreen.style.display = "none"; // Ficha menu ya kuanzia
+    gameStarted = true;                 // Ruhusu mchezo kuanza
+    speed = 0.1;                        // Gari lianze na spidi ndogo
 }
 
-/* ================= SHARE ================= */
-function share(){
-    window.open("https://wa.me/?text="+encodeURIComponent("Nimecheza GTA Game Score: "+score));
+/* ================= UDHIBITI NA MATUKIO ================= */
+function handleKeyDown(e) {
+    if (!gameStarted || gameOver) return; // Kuzuia control kama game haijaanza
+    
+    if (e.key === "ArrowUp") speed = Math.min(speed + 0.02, maxSpeed);
+    if (e.key === "ArrowDown") speed = Math.max(speed - 0.02, 0);
+    if (e.key === "ArrowLeft") player.userData.movingLeft = true;
+    if (e.key === "ArrowRight") player.userData.movingRight = true;
 }
 
-/* ================= SAVE ================= */
-function saveGame(){
-    localStorage.setItem("score", score);
-    alert("Game Imesaviwa! Score: " + score);
+function handleKeyUp(e) {
+    if (e.key === "ArrowLeft") player.userData.movingLeft = false;
+    if (e.key === "ArrowRight") player.userData.movingRight = false;
 }
 
-function loadGame(){
-    score = Number(localStorage.getItem("score")) || 0;
-    document.getElementById("score").innerText = "Score: "+score;
-    alert("Game Imepakiwa (Loaded)!");
-}
-
-/* ================= GAME LOOP ================= */
-function animate(){
-    requestAnimationFrame(animate);
-
-    /* MOVE PLAYER */
-    player.position.z -= speed;
-
-    /* CAMERA FOLLOW */
-    // Kamera inakaa nyuma na juu ya gari
-    camera.position.set(player.position.x, 6, player.position.z + 12);
-    camera.lookAt(player.position.x, player.position.y, player.position.z - 5);
-
-    /* POLICE AI */
-    police.forEach(p=>{
-        p.position.x += (player.position.x - p.position.x)*0.02;
-        p.position.z += (player.position.z - p.position.z)*0.04;
-
-        if(p.position.distanceTo(player.position) < 2.5){
-            alert("🚓 UMEKAMATWA NA POLISI! GAME OVER!");
-            location.reload();
-        }
-    });
-
-    /* COINS ZINAZUNGUKA NA KUKUSANYWA */
-    coins.forEach(c=>{
-        c.rotation.z += 0.05; // Coin inajizungusha
-        if(c.position.y > 0 && c.position.distanceTo(player.position) < 2){
-            coinsCollected++;
-            score += 10;
-            document.getElementById("score").innerText = "Score: "+score;
-            c.position.y = -100; // Ficha coin ikikusanywa
-        }
-    });
-
-    /* SIMPLE AD TRIGGER (distance based) */
-    ads.forEach(a=>{
-        let fake = new THREE.Vector3(Math.random()*50-25, 0, Math.random()* -500);
-        if(player.position.distanceTo(fake) < 1.5){
-            window.open(a.link, "_blank");
-            console.log("AD OPENED:", a.id);
-        }
-    });
-
-    /* RENDER */
-    renderer.render(scene, camera);
-}
-
-// Rekebisha ukubwa wa screen browser ikibadilishwa
-window.addEventListener('resize', () => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
+function onWindowResize() {
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+}
 
+function resetGame() {
+    gameOver = false;
+    gameStarted = true;
+    speed = 0.1; // Anza na spidi ndogo tena
+    score = 0;
+    player.position.set(0, 0, 0);
+    
+    // Rudisha vizuizi
+    obstacles.forEach(o => scene.remove(o));
+    obstacles = [];
+    createObstacles();
+
+    gameOverScreen.style.display = "none";
+    scoreElement.innerText = "Score: 0";
+    speedElement.innerText = "Speed: 10 km/h";
+}
+
+function triggerGameOver() {
+    gameOver = true;
+    speed = 0;
+    gameOverScreen.style.display = "flex";
+}
+
+/* ================= UMBILIKAJI WA MAZINGIRA ================= */
+function createMountains() {
+    const mtnMat = new THREE.MeshStandardMaterial({ color: 0x888888, roughness: 1, flatShading: true });
+    for (let i = 0; i < 15; i++) {
+        const height = 15 + Math.random() * 20;
+        const radius = 10 + Math.random() * 15;
+        const mtnGeo = new THREE.ConeGeometry(radius, height, 8);
+        const mtn = new THREE.Mesh(mtnGeo, mtnMat);
+        mtn.position.set(
+            (Math.random() > 0.5 ? 1 : -1) * (15 + radius + Math.random() * 20),
+            height / 2,
+            -150 + Math.random() * 100
+        );
+        scene.add(mtn);
+        mountains.push(mtn);
+    }
+}
+
+function createTrees() {
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5c4033 });
+    const leavesMat = new THREE.MeshStandardMaterial({ color: 0x228b22, flatShading: true });
+    
+    for (let i = 0; i < 40; i++) {
+        const tree = new THREE.Group();
+        const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 2), trunkMat);
+        trunk.position.y = 1;
+        tree.add(trunk);
+        
+        const leavesHeight = 3 + Math.random() * 2;
+        const leavesGeo = new THREE.ConeGeometry(1.5, leavesHeight, 8);
+        const leaves = new THREE.Mesh(leavesGeo, leavesMat);
+        leaves.position.y = trunk.position.y + 1 + leavesHeight/2;
+        tree.add(leaves);
+
+        tree.position.set(
+            (Math.random() > 0.5 ? 1 : -1) * (6.5 + Math.random() * 15),
+            0,
+            -Math.random() * 180
+        );
+        scene.add(tree);
+        trees.push(tree);
+    }
+}
+
+function createRocks() {
+    const rockMat = new THREE.MeshStandardMaterial({ color: 0x777777, roughness: 0.9, flatShading: true });
+    for (let i = 0; i < 20; i++) {
+        const radius = 0.5 + Math.random() * 1.5;
+        const rockGeo = new THREE.IcosahedronGeometry(radius, 0);
+        const rock = new THREE.Mesh(rockGeo, rockMat);
+        rock.position.set(
+            (Math.random() > 0.5 ? 1 : -1) * (6 + radius + Math.random() * 10),
+            radius,
+            -Math.random() * 180
+        );
+        scene.add(rock);
+    }
+}
+
+function createObstacles() {
+    for (let i = 0; i < 8; i++) {
+        const obs = new THREE.Mesh(
+            new THREE.BoxGeometry(2.5, 2.5, 2.5),
+            new THREE.MeshStandardMaterial({ color: 0x333333 })
+        );
+        resetObstacle(obs);
+        obs.position.z = -30 - i * 30;
+        scene.add(obs);
+        obstacles.push(obs);
+    }
+}
+
+function resetObstacle(obs) {
+    const lane = Math.floor(Math.random() * totalLanes) - 1; // -1, 0, 1
+    obs.position.set(lane * playerLaneWidth, 1.25, -200);
+}
+
+/* ================= MZUNGUKO WA MCHEZO ================= */
+function animate() {
+    requestAnimationFrame(animate);
+
+    /* Renderi inafanyika hata kama game haijaanza ili kioo kisionyeshe giza */
+    renderer.render(scene, camera);
+
+    if (!gameStarted || gameOver) return; // Simamisha logic kama haijaanza au game over
+
+    /* MWENDO WA GARI */
+    if (player.userData.movingLeft && player.position.x > -playerLaneWidth) {
+        player.position.x -= playerMovementSpeed;
+    }
+    if (player.userData.movingRight && player.position.x < playerLaneWidth) {
+        player.position.x += playerMovementSpeed;
+    }
+    player.position.z -= speed;
+
+    /* MFATILIO WA KAMERA */
+    camera.position.x = player.position.x * 0.2;
+    camera.position.z = player.position.z + 10;
+    camera.lookAt(player.position.x, 0, player.position.z - 5);
+
+    /* SASAISHA UI */
+    if (speed > 0) {
+        score += speed;
+        scoreElement.innerText = `Score: ${Math.floor(score)}`;
+        speedElement.innerText = `Speed: ${Math.floor(speed * 200)} km/h`; // Spidi imeongezwa kuonekana kubwa
+    }
+
+    /* SASAISHA MANDHARI NA VIKWAZO */
+    road.position.z = player.position.z - (player.position.z % 1000); 
+
+    [trees, mountains].forEach(group => {
+        group.forEach(item => {
+            if (item.position.z > camera.position.z + 20) {
+                item.position.z -= 200; 
+            }
+        });
+    });
+
+    // Sasisha vizuizi na angalia migongano
+    obstacles.forEach(obs => {
+        if (obs.position.z > player.position.z + 10) {
+            resetObstacle(obs); 
+        }
+
+        // Migongano (Collision Detection)
+        if (Math.abs(player.position.x - obs.position.x) < (1.8/2 + 2.5/2) &&
+            Math.abs(player.position.z - obs.position.z) < (4/2 + 2.5/2)) {
+            triggerGameOver();
+        }
+    });
+}
 </script>
 
 </body>
