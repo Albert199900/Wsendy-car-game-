@@ -3,195 +3,192 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>WSENDY ULTRA 3D - Pro Game Hub</title>
+    <title>WSENDY ULTRA 4D - TOUCH EDITION</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
-        body { background: #000; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+        body { background: #000; height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Arial Black', sans-serif; overflow: hidden; }
         
-        .game-world { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 850px; border-radius: 40px; box-shadow: 0 0 100px rgba(0, 255, 100, 0.2); overflow: hidden; background: #111; }
+        .game-world { 
+            position: relative; width: 100%; max-width: 480px; height: 100vh; 
+            background: linear-gradient(#004466, #1e90ff); 
+            border: 4px solid #00ffff; overflow: hidden; 
+        }
         
-        #bgVideo { position: absolute; width: 100%; height: 50%; object-fit: cover; top: 0; opacity: 0.6; z-index: 1; }
-        canvas { position: relative; display: block; width: 100%; height: 100%; z-index: 2; background: transparent; }
+        canvas { position: relative; z-index: 10; width: 100%; height: 100%; }
 
         /* HUD */
-        .hud { position: absolute; top: 15px; left: 0; right: 0; display: flex; justify-content: space-around; z-index: 20; pointer-events: none; }
-        .hud-card { background: rgba(0,0,0,0.85); padding: 8px 12px; border-radius: 15px; color: #00ff00; font-weight: bold; border: 1px solid #333; font-size: 11px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 50; pointer-events: none; }
+        .hud-card { 
+            background: rgba(0, 0, 0, 0.7); color: #00ffff; padding: 10px; 
+            border-radius: 5px; border-bottom: 3px solid #00ffff; font-size: 14px; 
+        }
 
-        /* Controls */
-        .controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 30; }
-        .btn { width: 65px; height: 65px; border-radius: 50%; background: rgba(30,30,30,0.9); border: 2px solid #444; color: white; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 0 #000; transition: 0.1s; }
-        .btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #000; border-color: #00ff00; }
-        .btn-nos { background: linear-gradient(#ff4e00, #ec9f05); border: none; font-size: 12px; font-weight: bold; animation: pulse 0.5s infinite alternate; }
-        
+        /* Vitufe maalum juu ya kioo */
+        .touch-zones { position: absolute; inset: 0; z-index: 20; display: flex; }
+        .zone { flex: 1; height: 100%; } /* Kushoto na Kulia zones */
+
+        .center-controls {
+            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; gap: 15px; z-index: 100;
+        }
+
+        .btn-action {
+            width: 100px; padding: 15px; border-radius: 10px; border: none;
+            font-weight: bold; color: white; font-size: 16px; box-shadow: 0 4px 0 #000;
+        }
+        .btn-brake { background: #ff0000; }
+        .btn-nitro { background: linear-gradient(to right, #ff8800, #ff0000); animation: pulse 0.5s infinite alternate; }
+
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
-
-        /* Overlays */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
-        .panel { background: #0a0a0a; border: 2px solid #00ff00; border-radius: 30px; padding: 25px; width: 100%; box-shadow: 0 0 30px #00ff0055; }
         
-        .splash-img { width: 100%; border-radius: 20px; margin-bottom: 20px; border: 2px solid #333; }
-        .btn-main { background: #00ff00; color: #000; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; border: none; font-size: 18px; cursor: pointer; margin-top: 10px; }
-        .btn-sec { background: #222; color: gold; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; border: 1px solid gold; margin-top: 10px; cursor: pointer; }
-
-        .app-item { background: #151515; border-radius: 15px; padding: 12px; margin: 10px 0; border: 1px solid #333; display: flex; align-items: center; gap: 15px; text-align: left; }
+        .overlay { position: absolute; inset: 0; background: #000; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
+        .btn-play { background: #00ffff; color: black; padding: 20px 60px; border-radius: 10px; font-weight: 900; font-size: 25px; border: none; cursor: pointer; }
+        
+        /* Mtetemeko wa 4D */
+        .shake { animation: shake 0.1s infinite; }
+        @keyframes shake {
+            0% { transform: translate(2px, 2px); }
+            50% { transform: translate(-2px, -1px); }
+            100% { transform: translate(1px, 2px); }
+        }
     </style>
 </head>
 <body>
 
-<div class="game-world">
-    <video id="bgVideo" loop muted playsinline>
-        <source src="https://u.pcloud.link/publink/show?code=XZhUuE5ZQ07H6KqeP4RkGqNP0dWkwSBFg6jV" type="video/mp4">
-    </video>
+<div class="game-world" id="world">
+    <canvas id="gameCanvas"></canvas>
 
-    <canvas id="gameCanvas" width="440" height="750"></canvas>
-    
+    <div class="touch-zones">
+        <div class="zone" id="touchLeft"></div>
+        <div class="zone" id="touchRight"></div>
+    </div>
+
+    <div class="center-controls">
+        <button class="btn-action btn-nitro" id="btnNitro">4D NITRO</button>
+        <button class="btn-action btn-brake" id="btnBrake">BRAKE 🛑</button>
+    </div>
+
     <div class="hud">
-        <div class="hud-card">🏆 <span id="scoreText">0</span></div>
-        <div class="hud-card">⛽ <span id="nosText">100</span>%</div>
-        <div class="hud-card">❤️ <span id="livesText">3</span></div>
+        <div class="hud-card">SPEED: <span id="spd">0</span></div>
+        <div class="hud-card">LIFE: <span id="hp">3</span></div>
     </div>
 
-    <div class="controls">
-        <div class="btn" id="leftBtn">⬅️</div>
-        <div class="btn" id="brakeBtn">🛑</div>
-        <div class="btn btn-nos" id="nosBtn">NITRO</div>
-        <div class="btn" id="gasBtn">⚡</div>
-        <div class="btn" id="rightBtn">➡️</div>
-    </div>
-
-    <div id="shopOverlay" class="overlay">
-        <div class="panel">
-            <img src="https://u.pcloud.link/publink/show?code=XZ3wuE5Z4wx0coiPGGVJivPTSBqoRSnT0e5k" class="splash-img" alt="WSENDY 3D">
-            <h2 style="color:#00ff00; font-style: italic;">WSENDY ULTRA 3D</h2>
-            <button class="btn-main" id="playBtn">ANZA MBIO 🏁</button>
-            <button class="btn-sec" onclick="showMoreApps()">MICHEZO MINGINE 🎮</button>
-            <button class="btn-sec" onclick="claimDaily()" style="color:#00ff00; border-color:#00ff00;">DAILY BONUS (ADS) 🎁</button>
-        </div>
-    </div>
-
-    <div id="appsOverlay" class="overlay" style="display:none;">
-        <div class="panel">
-            <h2 style="color:gold;">MICEZO MINGINE</h2>
-            <div class="app-item" onclick="openMoreAd()">
-                <div style="font-size:30px">⚽</div>
-                <div><strong>Football Pro</strong><br><small>Mechi kali za mtaani</small></div>
-            </div>
-            <div class="app-item" onclick="openMoreAd()">
-                <div style="font-size:30px">🔫</div>
-                <div><strong>War Zone</strong><br><small>Pigania kijiji chako</small></div>
-            </div>
-            <button class="btn-main" onclick="closeApps()" style="background:#cc0000; color:white;">RUDI NYUMA</button>
-        </div>
+    <div id="startMenu" class="overlay">
+        <h1 style="letter-spacing: 5px; color: #00ffff;">WSENDY 4D</h1>
+        <p style="margin-bottom: 20px;">Tumia vidole: Kushoto/Kulia kuelekea<br>Katikati kufunga breki</p>
+        <button class="btn-play" onclick="startGame()">ANZA KAZI 🏁</button>
     </div>
 </div>
 
-<audio id="carAudio" loop>
-    <source src="https://u.pcloud.link/publink/show?code=XZMOuE5ZfaCbDhEhx9uXY5xBJoVCihqetC87" type="audio/mpeg">
-</audio>
+<audio id="carSound" loop><source src="https://u.pcloud.link/publink/show?code=XZMOuE5ZfaCbDhEhx9uXY5xBJoVCihqetC87" type="audio/mpeg"></audio>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const bgVideo = document.getElementById('bgVideo');
-    const carAudio = document.getElementById('carAudio');
-    
-    const ADS_LINK = "https://oddlystudent.com/tu1ixct1?key=bf9ebe5967e8fa09c93394892db398f0";
-    const ADS_LINK_2 = "https://oddlystudent.com/xtf00r92?key=d436ce47c2f2dbf92b6ed9434d9bf01e";
+    const world = document.getElementById('world');
+    const carSound = document.getElementById('carSound');
 
-    function openAd() { window.open(ADS_LINK, '_blank'); }
-    function openMoreAd() { window.open(ADS_LINK_2, '_blank'); }
+    canvas.width = 400; canvas.height = 750;
 
-    let active = false, speed = 0, px = 190, frame = 0, score = 0, lives = 3, nitro = 100;
+    let active = false, px = 200, speed = 0, nitro = 100, hp = 3, frame = 0;
     let entities = [];
+    let inputs = { left: false, right: false, brake: false, nitro: false };
 
-    // App Logic
-    window.showMoreApps = () => { document.getElementById('appsOverlay').style.display = 'flex'; };
-    window.closeApps = () => { document.getElementById('appsOverlay').style.display = 'none'; };
-    window.claimDaily = () => { openAd(); nitro = 100; alert("Nitro Imejaa! ⚡"); };
+    function startGame() {
+        document.getElementById('startMenu').style.display = 'none';
+        active = true; carSound.play(); loop();
+    }
 
-    // Controls
-    let keys = { l:0, r:0, g:0, b:0, n:0 };
-    const listen = (id, k) => {
-        const el = document.getElementById(id);
-        el.ontouchstart = (e) => { e.preventDefault(); keys[k] = 1; };
-        el.ontouchend = () => keys[k] = 0;
-    };
-    listen('leftBtn','l'); listen('rightBtn','r'); listen('gasBtn','g'); listen('brakeBtn','b'); listen('nosBtn','n');
+    // New Touch Controls Logic
+    const lZone = document.getElementById('touchLeft');
+    const rZone = document.getElementById('touchRight');
+    const nBtn = document.getElementById('btnNitro');
+    const bBtn = document.getElementById('btnBrake');
 
-    function gameLoop() {
+    lZone.ontouchstart = () => inputs.left = true;
+    lZone.ontouchend = () => inputs.left = false;
+    rZone.ontouchstart = () => inputs.right = true;
+    rZone.ontouchend = () => inputs.right = false;
+    
+    nBtn.ontouchstart = () => inputs.nitro = true;
+    nBtn.ontouchend = () => inputs.nitro = false;
+    bBtn.ontouchstart = () => inputs.brake = true;
+    bBtn.ontouchend = () => inputs.brake = false;
+
+    function loop() {
         if(!active) return;
-        
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, 400, 750);
 
-        // Road Drawing (Perspective)
-        ctx.fillStyle = "rgba(40,40,40,0.8)"; 
-        ctx.beginPath();
-        ctx.moveTo(180, 400); ctx.lineTo(260, 400); 
-        ctx.lineTo(440, 750); ctx.lineTo(0, 750); 
-        ctx.fill();
-
-        // Movement Logic
-        if(keys.l) px -= 6; if(keys.r) px += 6;
+        // Movement Physics
+        if(inputs.left) px -= 8;
+        if(inputs.right) px += 8;
         
-        if(keys.n && nitro > 0) { 
-            speed = Math.min(speed + 0.8, 30); 
-            nitro -= 0.5; 
-            ctx.shadowBlur = 20; ctx.shadowColor = "cyan";
+        if(inputs.nitro && nitro > 0) {
+            speed = 28; nitro -= 0.7;
+            world.classList.add('shake');
+        } else if(inputs.brake) {
+            speed = Math.max(speed - 1, 0);
+            world.classList.remove('shake');
         } else {
-            ctx.shadowBlur = 0;
-            if(keys.g) speed = Math.min(speed + 0.2, 15);
-            else if(keys.b) speed = Math.max(speed - 0.5, 0);
-            else speed = Math.max(speed - 0.1, 4);
+            speed = 12; // Auto-gas
+            world.classList.remove('shake');
         }
 
-        // Draw Player
-        ctx.font = "60px Arial";
-        ctx.fillText("🏍️", px, 680);
+        // Draw River & 4D Effects
+        ctx.fillStyle = "#1e90ff";
+        ctx.fillRect(0, 300, 400, 450);
+        
+        // 4D Water Flow
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.setLineDash([20, 50]);
+        ctx.lineDashOffset = -frame * speed;
+        ctx.beginPath();
+        for(let x=0; x<=400; x+=100) { ctx.moveTo(x, 300); ctx.lineTo(x, 750); }
+        ctx.stroke();
 
-        // Traffic
-        if(frame % 40 === 0) {
-            entities.push({x: 80 + Math.random()*280, y: 380, t: Math.random() > 0.3 ? "🚘" : "🚚", s: 2 + Math.random()*5});
+        // Entity Spawning (Vikwazo)
+        if(frame % 35 === 0) {
+            entities.push({ x: Math.random()*300+50, y: 300, z: 0.1, type: Math.random()>0.5?"🪵":"🚙" });
         }
 
         entities.forEach((e, i) => {
-            e.y += (speed + e.s);
-            // Perspective scaling
-            let scale = (e.y - 300) / 300;
-            ctx.font = (30 * scale) + "px Arial";
-            ctx.fillText(e.t, e.x, e.y);
+            e.z += speed / 150;
+            let scale = e.z * e.z * 8;
+            let sx = (e.x - 200) * scale + 200;
+            let sy = 300 + scale * 40;
 
-            // Collision
-            if(e.y > 640 && e.y < 700 && Math.abs(e.x - px) < 40) {
-                lives--;
-                entities.splice(i, 1);
-                if(lives <= 0) {
-                    alert("Game Over! Score: " + Math.floor(score));
-                    location.reload();
-                }
+            ctx.font = (20 + scale * 6) + "px Arial";
+            ctx.fillText(e.type, sx, sy);
+
+            if(scale > 14 && Math.abs(sx - px) < 50) {
+                hp--; entities.splice(i, 1);
+                if(hp <= 0) location.reload();
             }
-            if(e.y > 800) entities.splice(i, 1);
+            if(sy > 800) entities.splice(i,1);
         });
 
-        // Update HUD
-        document.getElementById('scoreText').innerText = Math.floor(score += speed/10);
-        document.getElementById('nosText').innerText = Math.floor(nitro);
-        document.getElementById('livesText').innerText = lives;
-        
-        // Dynamic Sound Pitch
-        carAudio.playbackRate = 0.5 + (speed / 15);
+        // Player SUV
+        ctx.font = "85px Arial";
+        ctx.shadowBlur = 15; ctx.shadowColor = inputs.nitro ? "orange" : "transparent";
+        ctx.fillText("🚘", px - 42, 680);
+        ctx.shadowBlur = 0;
 
-        px = Math.max(20, Math.min(360, px));
+        // Splash 4D Effect
+        if(speed > 10) {
+            ctx.font = "40px Arial";
+            ctx.fillText("💧", px - 80 + (frame%10), 690);
+            ctx.fillText("💧", px + 40 - (frame%10), 690);
+        }
+
+        // Update UI
+        document.getElementById('spd').innerText = Math.floor(speed * 10);
+        document.getElementById('hp').innerText = "❤️".repeat(hp);
+        carSound.playbackRate = 0.6 + (speed / 20);
+
+        px = Math.max(40, Math.min(360, px));
         frame++;
-        requestAnimationFrame(gameLoop);
+        requestAnimationFrame(loop);
     }
-
-    document.getElementById('playBtn').onclick = () => {
-        document.getElementById('shopOverlay').style.display = 'none';
-        active = true;
-        bgVideo.play();
-        carAudio.play();
-        gameLoop();
-    };
 </script>
 </body>
 </html>
