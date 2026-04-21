@@ -1,194 +1,282 @@
 <!DOCTYPE html>
 <html lang="sw">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>WSENDY ULTRA 4D - TOUCH EDITION</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-        body { background: #000; height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Arial Black', sans-serif; overflow: hidden; }
-        
-        .game-world { 
-            position: relative; width: 100%; max-width: 480px; height: 100vh; 
-            background: linear-gradient(#004466, #1e90ff); 
-            border: 4px solid #00ffff; overflow: hidden; 
-        }
-        
-        canvas { position: relative; z-index: 10; width: 100%; height: 100%; }
+<meta charset="UTF-8">
+<title>FULL GTA GAME FINAL</title>
 
-        /* HUD */
-        .hud { position: absolute; top: 20px; width: 100%; display: flex; justify-content: space-around; z-index: 50; pointer-events: none; }
-        .hud-card { 
-            background: rgba(0, 0, 0, 0.7); color: #00ffff; padding: 10px; 
-            border-radius: 5px; border-bottom: 3px solid #00ffff; font-size: 14px; 
-        }
-
-        /* Vitufe maalum juu ya kioo */
-        .touch-zones { position: absolute; inset: 0; z-index: 20; display: flex; }
-        .zone { flex: 1; height: 100%; } /* Kushoto na Kulia zones */
-
-        .center-controls {
-            position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-            display: flex; flex-direction: column; gap: 15px; z-index: 100;
-        }
-
-        .btn-action {
-            width: 100px; padding: 15px; border-radius: 10px; border: none;
-            font-weight: bold; color: white; font-size: 16px; box-shadow: 0 4px 0 #000;
-        }
-        .btn-brake { background: #ff0000; }
-        .btn-nitro { background: linear-gradient(to right, #ff8800, #ff0000); animation: pulse 0.5s infinite alternate; }
-
-        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
-        
-        .overlay { position: absolute; inset: 0; background: #000; z-index: 200; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
-        .btn-play { background: #00ffff; color: black; padding: 20px 60px; border-radius: 10px; font-weight: 900; font-size: 25px; border: none; cursor: pointer; }
-        
-        /* Mtetemeko wa 4D */
-        .shake { animation: shake 0.1s infinite; }
-        @keyframes shake {
-            0% { transform: translate(2px, 2px); }
-            50% { transform: translate(-2px, -1px); }
-            100% { transform: translate(1px, 2px); }
-        }
-    </style>
+<style>
+body{margin:0;overflow:hidden;font-family:Arial}
+#ui{
+position:absolute;top:10px;left:10px;
+background:rgba(0,0,0,0.6);
+color:white;
+padding:10px;
+border-radius:8px;
+}
+button{margin:4px;padding:6px}
+</style>
 </head>
+
 <body>
 
-<div class="game-world" id="world">
-    <canvas id="gameCanvas"></canvas>
+<div id="ui">
+<p id="score">Score: 0</p>
+<p id="mission">Mission: Collect Coins</p>
 
-    <div class="touch-zones">
-        <div class="zone" id="touchLeft"></div>
-        <div class="zone" id="touchRight"></div>
-    </div>
-
-    <div class="center-controls">
-        <button class="btn-action btn-nitro" id="btnNitro">4D NITRO</button>
-        <button class="btn-action btn-brake" id="btnBrake">BRAKE 🛑</button>
-    </div>
-
-    <div class="hud">
-        <div class="hud-card">SPEED: <span id="spd">0</span></div>
-        <div class="hud-card">LIFE: <span id="hp">3</span></div>
-    </div>
-
-    <div id="startMenu" class="overlay">
-        <h1 style="letter-spacing: 5px; color: #00ffff;">WSENDY 4D</h1>
-        <p style="margin-bottom: 20px;">Tumia vidole: Kushoto/Kulia kuelekea<br>Katikati kufunga breki</p>
-        <button class="btn-play" onclick="startGame()">ANZA KAZI 🏁</button>
-    </div>
+<button onclick="share()">📲 Share</button>
+<button onclick="saveGame()">💾 Save</button>
+<button onclick="loadGame()">📂 Load</button>
 </div>
 
-<audio id="carSound" loop><source src="https://u.pcloud.link/publink/show?code=XZMOuE5ZfaCbDhEhx9uXY5xBJoVCihqetC87" type="audio/mpeg"></audio>
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 
 <script>
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const world = document.getElementById('world');
-    const carSound = document.getElementById('carSound');
 
-    canvas.width = 400; canvas.height = 750;
+/* ================= SCENE ================= */
+let scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
 
-    let active = false, px = 200, speed = 0, nitro = 100, hp = 3, frame = 0;
-    let entities = [];
-    let inputs = { left: false, right: false, brake: false, nitro: false };
+let camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,2000);
 
-    function startGame() {
-        document.getElementById('startMenu').style.display = 'none';
-        active = true; carSound.play(); loop();
-    }
+let renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
 
-    // New Touch Controls Logic
-    const lZone = document.getElementById('touchLeft');
-    const rZone = document.getElementById('touchRight');
-    const nBtn = document.getElementById('btnNitro');
-    const bBtn = document.getElementById('btnBrake');
+/* LIGHT */
+scene.add(new THREE.DirectionalLight(0xffffff,1));
+scene.add(new THREE.AmbientLight(0x444444));
 
-    lZone.ontouchstart = () => inputs.left = true;
-    lZone.ontouchend = () => inputs.left = false;
-    rZone.ontouchstart = () => inputs.right = true;
-    rZone.ontouchend = () => inputs.right = false;
-    
-    nBtn.ontouchstart = () => inputs.nitro = true;
-    nBtn.ontouchend = () => inputs.nitro = false;
-    bBtn.ontouchstart = () => inputs.brake = true;
-    bBtn.ontouchend = () => inputs.brake = false;
+/* GROUND */
+let ground = new THREE.Mesh(
+new THREE.PlaneGeometry(500,500),
+new THREE.MeshLambertMaterial({color:0x2e7d32})
+);
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
 
-    function loop() {
-        if(!active) return;
-        ctx.clearRect(0, 0, 400, 750);
+/* ================= PLAYER ================= */
+let player = new THREE.Mesh(
+new THREE.BoxGeometry(1,1,2),
+new THREE.MeshLambertMaterial({color:0xff0000})
+);
+player.position.y = 0.5;
+scene.add(player);
 
-        // Movement Physics
-        if(inputs.left) px -= 8;
-        if(inputs.right) px += 8;
-        
-        if(inputs.nitro && nitro > 0) {
-            speed = 28; nitro -= 0.7;
-            world.classList.add('shake');
-        } else if(inputs.brake) {
-            speed = Math.max(speed - 1, 0);
-            world.classList.remove('shake');
-        } else {
-            speed = 12; // Auto-gas
-            world.classList.remove('shake');
-        }
+let speed = 0;
+let score = 0;
+let coinsCollected = 0;
 
-        // Draw River & 4D Effects
-        ctx.fillStyle = "#1e90ff";
-        ctx.fillRect(0, 300, 400, 450);
-        
-        // 4D Water Flow
-        ctx.strokeStyle = "rgba(255,255,255,0.3)";
-        ctx.setLineDash([20, 50]);
-        ctx.lineDashOffset = -frame * speed;
-        ctx.beginPath();
-        for(let x=0; x<=400; x+=100) { ctx.moveTo(x, 300); ctx.lineTo(x, 750); }
-        ctx.stroke();
+/* ================= AI ================= */
+let police = [];
+let traffic = [];
+let coins = [];
+let adCoins = [];
 
-        // Entity Spawning (Vikwazo)
-        if(frame % 35 === 0) {
-            entities.push({ x: Math.random()*300+50, y: 300, z: 0.1, type: Math.random()>0.5?"🪵":"🚙" });
-        }
+/* ================= MISSIONS ================= */
+let missions = [
+{type:"collect",target:10,reward:100,done:false},
+{type:"survive",time:20,reward:200,done:false}
+];
 
-        entities.forEach((e, i) => {
-            e.z += speed / 150;
-            let scale = e.z * e.z * 8;
-            let sx = (e.x - 200) * scale + 200;
-            let sy = 300 + scale * 40;
+let currentMission = 0;
+let timer = 0;
 
-            ctx.font = (20 + scale * 6) + "px Arial";
-            ctx.fillText(e.type, sx, sy);
+/* ================= ADS ================= */
+let ads = [
+{
+id:"29084400",
+link:"https://oddlystudent.com/tu1ixct1?key=bf9ebe5967e8fa09c93394892db398f0"
+},
+{
+id:"20280116",
+link:"https://oddlystudent.com/xtf00r92?key=d436ce47c2f2dbf92b6ed9434d9bf01e"
+}
+];
 
-            if(scale > 14 && Math.abs(sx - px) < 50) {
-                hp--; entities.splice(i, 1);
-                if(hp <= 0) location.reload();
-            }
-            if(sy > 800) entities.splice(i,1);
-        });
+/* ================= INIT ================= */
+init();
+animate();
 
-        // Player SUV
-        ctx.font = "85px Arial";
-        ctx.shadowBlur = 15; ctx.shadowColor = inputs.nitro ? "orange" : "transparent";
-        ctx.fillText("🚘", px - 42, 680);
-        ctx.shadowBlur = 0;
+function init(){
 
-        // Splash 4D Effect
-        if(speed > 10) {
-            ctx.font = "40px Arial";
-            ctx.fillText("💧", px - 80 + (frame%10), 690);
-            ctx.fillText("💧", px + 40 - (frame%10), 690);
-        }
+/* POLICE */
+for(let i=0;i<3;i++){
+let p = new THREE.Mesh(
+new THREE.BoxGeometry(1,1,2),
+new THREE.MeshLambertMaterial({color:0x0000ff})
+);
+p.position.set(Math.random()*20-10,0.5,-20);
+scene.add(p);
+police.push(p);
+}
 
-        // Update UI
-        document.getElementById('spd').innerText = Math.floor(speed * 10);
-        document.getElementById('hp').innerText = "❤️".repeat(hp);
-        carSound.playbackRate = 0.6 + (speed / 20);
+/* TRAFFIC */
+for(let i=0;i<20;i++){
+let t = new THREE.Mesh(
+new THREE.BoxGeometry(1,1,2),
+new THREE.MeshLambertMaterial({color:0x00ff00})
+);
+t.position.set(Math.random()*200-100,0.5,Math.random()*-200);
+scene.add(t);
+traffic.push(t);
+}
 
-        px = Math.max(40, Math.min(360, px));
-        frame++;
-        requestAnimationFrame(loop);
-    }
+/* COINS */
+for(let i=0;i<20;i++){
+let c = new THREE.Mesh(
+new THREE.SphereGeometry(0.4),
+new THREE.MeshLambertMaterial({color:0xffff00})
+);
+c.position.set(Math.random()*200-100,0.5,Math.random()*200-100);
+scene.add(c);
+coins.push(c);
+}
+
+/* ADS COINS */
+ads.forEach(a=>{
+let coin = new THREE.Mesh(
+new THREE.SphereGeometry(0.5),
+new THREE.MeshLambertMaterial({color:0x00ffff})
+);
+coin.position.set(Math.random()*200-100,0.5,Math.random()*200-100);
+coin.userData = a;
+scene.add(coin);
+adCoins.push(coin);
+});
+
+/* CONTROLS */
+window.addEventListener("keydown",control);
+
+}
+
+/* ================= CONTROLS ================= */
+function control(e){
+
+if(e.key==="ArrowUp") speed += 0.02;
+if(e.key==="ArrowDown") speed -= 0.02;
+
+if(e.key==="ArrowLeft") player.position.x -= 0.5;
+if(e.key==="ArrowRight") player.position.x += 0.5;
+
+}
+
+/* ================= MISSIONS ================= */
+function updateMission(){
+
+let m = missions[currentMission];
+if(!m) return;
+
+if(m.type==="collect"){
+if(coinsCollected >= m.target){
+completeMission();
+}
+}
+
+if(m.type==="survive"){
+timer++;
+if(timer > m.time*60){
+completeMission();
+}
+}
+
+}
+
+function completeMission(){
+
+let m = missions[currentMission];
+m.done = true;
+
+score += m.reward;
+
+document.getElementById("score").innerText = "Score: "+score;
+
+currentMission++;
+
+if(missions[currentMission]){
+document.getElementById("mission").innerText = missions[currentMission].type;
+}else{
+document.getElementById("mission").innerText = "GAME COMPLETED 🎉";
+}
+
+}
+
+/* ================= SAVE / LOAD ================= */
+function saveGame(){
+localStorage.setItem("score",score);
+localStorage.setItem("mission",currentMission);
+}
+
+function loadGame(){
+score = Number(localStorage.getItem("score")) || 0;
+currentMission = Number(localStorage.getItem("mission")) || 0;
+}
+
+/* ================= SHARE ================= */
+function share(){
+window.open("https://wa.me/?text="+encodeURIComponent("Nimecheza GTA GAME Score: "+score));
+}
+
+/* ================= GAME LOOP ================= */
+function animate(){
+requestAnimationFrame(animate);
+
+/* PLAYER */
+player.position.z -= speed;
+
+/* CAMERA */
+camera.position.set(player.position.x,6,player.position.z+10);
+camera.lookAt(player.position);
+
+/* TRAFFIC */
+traffic.forEach(t=>{
+t.position.z += 0.3;
+if(t.position.z > 100)t.position.z = -200;
+});
+
+/* COINS */
+coins.forEach(c=>{
+if(c.position.distanceTo(player.position)<1){
+coinsCollected++;
+score += 10;
+document.getElementById("score").innerText = "Score: "+score;
+c.position.y = -100;
+}
+});
+
+/* ADS */
+adCoins.forEach(c=>{
+if(c.position.distanceTo(player.position)<1){
+
+let ad = c.userData;
+
+window.open(ad.link,"_blank");
+
+console.log("AD ID:",ad.id);
+
+c.position.y = -100;
+}
+});
+
+/* POLICE */
+police.forEach(p=>{
+p.position.x += (player.position.x - p.position.x)*0.03;
+p.position.z += (player.position.z - p.position.z)*0.06;
+
+if(p.position.distanceTo(player.position)<2){
+alert("🚓 GAME OVER!");
+location.reload();
+}
+});
+
+/* MISSIONS */
+updateMission();
+
+/* RENDER */
+renderer.render(scene,camera);
+
+}
+
 </script>
+
 </body>
 </html>
