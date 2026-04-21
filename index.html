@@ -2,18 +2,24 @@
 <html lang="sw">
 <head>
 <meta charset="UTF-8">
-<title>FULL GTA GAME FINAL</title>
+<title>GTA STYLE FULL GAME</title>
 
 <style>
-body{margin:0;overflow:hidden;font-family:Arial}
+body { margin:0; overflow:hidden; font-family:Arial; }
+
 #ui{
-position:absolute;top:10px;left:10px;
+position:absolute;
+top:10px; left:10px;
 background:rgba(0,0,0,0.6);
 color:white;
 padding:10px;
 border-radius:8px;
 }
-button{margin:4px;padding:6px}
+
+button{
+margin:4px;
+padding:6px;
+}
 </style>
 </head>
 
@@ -32,57 +38,81 @@ button{margin:4px;padding:6px}
 
 <script>
 
-/* ================= SCENE ================= */
-let scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb);
-
-let camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,2000);
-
-let renderer = new THREE.WebGLRenderer({antialias:true});
-renderer.setSize(innerWidth,innerHeight);
-document.body.appendChild(renderer.domElement);
-
-/* LIGHT */
-scene.add(new THREE.DirectionalLight(0xffffff,1));
-scene.add(new THREE.AmbientLight(0x444444));
-
-/* GROUND */
-let ground = new THREE.Mesh(
-new THREE.PlaneGeometry(500,500),
-new THREE.MeshLambertMaterial({color:0x2e7d32})
-);
-ground.rotation.x = -Math.PI/2;
-scene.add(ground);
-
-/* ================= PLAYER ================= */
-let player = new THREE.Mesh(
-new THREE.BoxGeometry(1,1,2),
-new THREE.MeshLambertMaterial({color:0xff0000})
-);
-player.position.y = 0.5;
-scene.add(player);
+let scene, camera, renderer;
+let player;
 
 let speed = 0;
 let score = 0;
 let coinsCollected = 0;
 
-/* ================= AI ================= */
 let police = [];
-let traffic = [];
 let coins = [];
-let adCoins = [];
+let ads = [];
 
-/* ================= MISSIONS ================= */
 let missions = [
-{type:"collect",target:10,reward:100,done:false},
-{type:"survive",time:20,reward:200,done:false}
+{target:10,reward:100}
 ];
 
 let currentMission = 0;
-let timer = 0;
 
-/* ================= ADS ================= */
-let ads = [
+/* ================= INIT ================= */
+init();
+animate();
+
+function init(){
+
+scene = new THREE.Scene();
+scene.background = new THREE.Color(0x87ceeb);
+
+camera = new THREE.PerspectiveCamera(75,innerWidth/innerHeight,0.1,1000);
+
+renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(innerWidth,innerHeight);
+document.body.appendChild(renderer.domElement);
+
+/* LIGHT */
+scene.add(new THREE.AmbientLight(0xffffff));
+
+/* GROUND */
+let ground = new THREE.Mesh(
+new THREE.PlaneGeometry(200,200),
+new THREE.MeshBasicMaterial({color:0x228B22})
+);
+ground.rotation.x = -Math.PI/2;
+scene.add(ground);
+
+/* PLAYER */
+player = new THREE.Mesh(
+new THREE.BoxGeometry(1,1,2),
+new THREE.MeshBasicMaterial({color:0xff0000})
+);
+player.position.y = 0.5;
+scene.add(player);
+
+/* POLICE */
+for(let i=0;i<3;i++){
+let p = new THREE.Mesh(
+new THREE.BoxGeometry(1,1,2),
+new THREE.MeshBasicMaterial({color:0x0000ff})
+);
+p.position.set(Math.random()*20-10,0.5,-20);
+scene.add(p);
+police.push(p);
+}
+
+/* COINS */
+for(let i=0;i<20;i++){
+let c = new THREE.Mesh(
+new THREE.SphereGeometry(0.4),
+new THREE.MeshBasicMaterial({color:0xffff00})
+);
+c.position.set(Math.random()*50-25,0.5,Math.random()*50-25);
+scene.add(c);
+coins.push(c);
+}
+
+/* ADS */
+ads = [
 {
 id:"29084400",
 link:"https://oddlystudent.com/tu1ixct1?key=bf9ebe5967e8fa09c93394892db398f0"
@@ -93,58 +123,7 @@ link:"https://oddlystudent.com/xtf00r92?key=d436ce47c2f2dbf92b6ed9434d9bf01e"
 }
 ];
 
-/* ================= INIT ================= */
-init();
-animate();
-
-function init(){
-
-/* POLICE */
-for(let i=0;i<3;i++){
-let p = new THREE.Mesh(
-new THREE.BoxGeometry(1,1,2),
-new THREE.MeshLambertMaterial({color:0x0000ff})
-);
-p.position.set(Math.random()*20-10,0.5,-20);
-scene.add(p);
-police.push(p);
-}
-
-/* TRAFFIC */
-for(let i=0;i<20;i++){
-let t = new THREE.Mesh(
-new THREE.BoxGeometry(1,1,2),
-new THREE.MeshLambertMaterial({color:0x00ff00})
-);
-t.position.set(Math.random()*200-100,0.5,Math.random()*-200);
-scene.add(t);
-traffic.push(t);
-}
-
-/* COINS */
-for(let i=0;i<20;i++){
-let c = new THREE.Mesh(
-new THREE.SphereGeometry(0.4),
-new THREE.MeshLambertMaterial({color:0xffff00})
-);
-c.position.set(Math.random()*200-100,0.5,Math.random()*200-100);
-scene.add(c);
-coins.push(c);
-}
-
-/* ADS COINS */
-ads.forEach(a=>{
-let coin = new THREE.Mesh(
-new THREE.SphereGeometry(0.5),
-new THREE.MeshLambertMaterial({color:0x00ffff})
-);
-coin.position.set(Math.random()*200-100,0.5,Math.random()*200-100);
-coin.userData = a;
-scene.add(coin);
-adCoins.push(coin);
-});
-
-/* CONTROLS */
+/* KEY CONTROL */
 window.addEventListener("keydown",control);
 
 }
@@ -160,77 +139,40 @@ if(e.key==="ArrowRight") player.position.x += 0.5;
 
 }
 
-/* ================= MISSIONS ================= */
-function updateMission(){
-
-let m = missions[currentMission];
-if(!m) return;
-
-if(m.type==="collect"){
-if(coinsCollected >= m.target){
-completeMission();
-}
+/* ================= SHARE ================= */
+function share(){
+window.open("https://wa.me/?text="+encodeURIComponent("Nimecheza GTA Game Score: "+score));
 }
 
-if(m.type==="survive"){
-timer++;
-if(timer > m.time*60){
-completeMission();
-}
-}
-
-}
-
-function completeMission(){
-
-let m = missions[currentMission];
-m.done = true;
-
-score += m.reward;
-
-document.getElementById("score").innerText = "Score: "+score;
-
-currentMission++;
-
-if(missions[currentMission]){
-document.getElementById("mission").innerText = missions[currentMission].type;
-}else{
-document.getElementById("mission").innerText = "GAME COMPLETED 🎉";
-}
-
-}
-
-/* ================= SAVE / LOAD ================= */
+/* ================= SAVE ================= */
 function saveGame(){
 localStorage.setItem("score",score);
-localStorage.setItem("mission",currentMission);
 }
 
 function loadGame(){
 score = Number(localStorage.getItem("score")) || 0;
-currentMission = Number(localStorage.getItem("mission")) || 0;
-}
-
-/* ================= SHARE ================= */
-function share(){
-window.open("https://wa.me/?text="+encodeURIComponent("Nimecheza GTA GAME Score: "+score));
 }
 
 /* ================= GAME LOOP ================= */
 function animate(){
 requestAnimationFrame(animate);
 
-/* PLAYER */
+/* MOVE PLAYER */
 player.position.z -= speed;
 
-/* CAMERA */
-camera.position.set(player.position.x,6,player.position.z+10);
+/* CAMERA FOLLOW */
+camera.position.set(player.position.x,5,player.position.z+10);
 camera.lookAt(player.position);
 
-/* TRAFFIC */
-traffic.forEach(t=>{
-t.position.z += 0.3;
-if(t.position.z > 100)t.position.z = -200;
+/* POLICE AI */
+police.forEach(p=>{
+p.position.x += (player.position.x - p.position.x)*0.03;
+p.position.z += (player.position.z - p.position.z)*0.06;
+
+if(p.position.distanceTo(player.position)<2){
+alert("🚓 GAME OVER!");
+location.reload();
+}
 });
 
 /* COINS */
@@ -243,33 +185,22 @@ c.position.y = -100;
 }
 });
 
-/* ADS */
-adCoins.forEach(c=>{
-if(c.position.distanceTo(player.position)<1){
-
-let ad = c.userData;
-
-window.open(ad.link,"_blank");
-
-console.log("AD ID:",ad.id);
-
-c.position.y = -100;
+/* ADS SYSTEM */
+ads.forEach(a=>{
+if(player.position.distanceTo(new THREE.Vector3(Math.random(),0,Math.random()))<0.1){
+// not used trigger style (simple version below)
 }
 });
 
-/* POLICE */
-police.forEach(p=>{
-p.position.x += (player.position.x - p.position.x)*0.03;
-p.position.z += (player.position.z - p.position.z)*0.06;
+/* SIMPLE AD TRIGGER (distance based) */
+ads.forEach(a=>{
+let fake = new THREE.Vector3(Math.random()*50-25,0,Math.random()*50-25);
 
-if(p.position.distanceTo(player.position)<2){
-alert("🚓 GAME OVER!");
-location.reload();
+if(player.position.distanceTo(fake)<1){
+window.open(a.link,"_blank");
+console.log("AD OPENED:",a.id);
 }
 });
-
-/* MISSIONS */
-updateMission();
 
 /* RENDER */
 renderer.render(scene,camera);
