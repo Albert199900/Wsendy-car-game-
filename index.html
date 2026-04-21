@@ -8,36 +8,41 @@
         * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
         body { background: #000; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
         
-        .game-world { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 850px; border-radius: 40px; box-shadow: 0 0 100px rgba(0, 255, 100, 0.2); overflow: hidden; background: #000; }
-        canvas { display: block; width: 100%; height: 100%; background: #1a1a1a; }
+        .game-world { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 850px; border-radius: 40px; box-shadow: 0 0 100px rgba(0, 255, 100, 0.2); overflow: hidden; background: #111; }
+        
+        #bgVideo { position: absolute; width: 100%; height: 50%; object-fit: cover; top: 0; opacity: 0.6; z-index: 1; }
+        canvas { position: relative; display: block; width: 100%; height: 100%; z-index: 2; background: transparent; }
 
         /* HUD */
         .hud { position: absolute; top: 15px; left: 0; right: 0; display: flex; justify-content: space-around; z-index: 20; pointer-events: none; }
-        .hud-card { background: rgba(0,0,0,0.85); padding: 8px 12px; border-radius: 15px; color: #00ff00; font-weight: bold; border: 1px solid #333; font-size: 11px; }
+        .hud-card { background: rgba(0,0,0,0.85); padding: 8px 12px; border-radius: 15px; color: #00ff00; font-weight: bold; border: 1px solid #333; font-size: 11px; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
 
         /* Controls */
         .controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 30; }
-        .btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(30,30,30,0.95); border: 2px solid #444; color: white; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 6px 0 #000; }
-        .btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #000; border-color: #00ff00; }
-        .btn-nos { background: linear-gradient(#0072ff, #00c6ff); border: none; font-size: 13px; font-weight: bold; animation: pulse 1s infinite; }
+        .btn { width: 65px; height: 65px; border-radius: 50%; background: rgba(30,30,30,0.9); border: 2px solid #444; color: white; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 4px 0 #000; transition: 0.1s; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 0px 0 #000; border-color: #00ff00; }
+        .btn-nos { background: linear-gradient(#ff4e00, #ec9f05); border: none; font-size: 12px; font-weight: bold; animation: pulse 0.5s infinite alternate; }
         
-        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.1); } }
 
-        /* Menus */
-        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: flex; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
-        .panel { background: #0a0a0a; border: 2px solid #00ff00; border-radius: 35px; padding: 25px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        /* Overlays */
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; display: flex; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
+        .panel { background: #0a0a0a; border: 2px solid #00ff00; border-radius: 30px; padding: 25px; width: 100%; box-shadow: 0 0 30px #00ff0055; }
         
-        .btn-main { background: #00ff00; color: #000; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; border: none; font-size: 16px; cursor: pointer; margin-top: 10px; }
-        .btn-sec { background: #333; color: gold; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; border: 1px solid gold; margin-top: 10px; cursor: pointer; }
+        .splash-img { width: 100%; border-radius: 20px; margin-bottom: 20px; border: 2px solid #333; }
+        .btn-main { background: #00ff00; color: #000; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; border: none; font-size: 18px; cursor: pointer; margin-top: 10px; }
+        .btn-sec { background: #222; color: gold; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; border: 1px solid gold; margin-top: 10px; cursor: pointer; }
 
-        /* More Apps List */
-        .app-item { background: #151515; border-radius: 15px; padding: 15px; margin: 10px 0; border: 1px solid #333; display: flex; align-items: center; gap: 15px; text-align: left; }
-        .app-icon { font-size: 35px; background: #222; padding: 10px; border-radius: 12px; }
+        .app-item { background: #151515; border-radius: 15px; padding: 12px; margin: 10px 0; border: 1px solid #333; display: flex; align-items: center; gap: 15px; text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="game-world">
+    <video id="bgVideo" loop muted playsinline>
+        <source src="https://u.pcloud.link/publink/show?code=XZhUuE5ZQ07H6KqeP4RkGqNP0dWkwSBFg6jV" type="video/mp4">
+    </video>
+
     <canvas id="gameCanvas" width="440" height="750"></canvas>
     
     <div class="hud">
@@ -53,47 +58,43 @@
         <div class="btn" id="gasBtn">⚡</div>
         <div class="btn" id="rightBtn">➡️</div>
     </div>
-</div>
 
-<div id="shopOverlay" class="overlay">
-    <div class="panel">
-        <h1 style="color:#00ff00; font-style: italic; margin-bottom: 20px;">W-MOTO HUB</h1>
-        
-        <button class="btn-main" id="playBtn">🏁 ANZA MBIO</button>
-        <button class="btn-sec" onclick="showMoreApps()">🎮 MICHEZO MINGINE (MORE APPS)</button>
-        <button class="btn-sec" onclick="claimDaily()" style="color:#00ff00; border-color:#00ff00;">🎁 DAILY BONUS (FREE AD)</button>
-        <button class="btn-sec" onclick="shareGame()" style="color:cyan; border-color:cyan;">📲 SHARE NA MARAFIKI</button>
-        
-        <div id="activeCar" style="margin-top:20px; font-size:14px;">Gari: <span style="color:gold" id="carName">SUV RED</span></div>
-    </div>
-</div>
-
-<div id="appsOverlay" class="overlay" style="display:none;">
-    <div class="panel">
-        <h2 style="color:gold;">MICHEZO MINGINE</h2>
-        <div style="margin: 15px 0;">
-            <div class="app-item" onclick="openMoreAd()">
-                <div class="app-icon">⚽</div>
-                <div><strong>Football Pro</strong><br><small style="color:#777;">Cheza soka la kisasa</small></div>
-            </div>
-            <div class="app-item" onclick="openMoreAd()">
-                <div class="app-icon">🔫</div>
-                <div><strong>War Zone</strong><br><small style="color:#777;">Pigania amani hapa</small></div>
-            </div>
-            <div class="app-item" onclick="openMoreAd()">
-                <div class="app-icon">🍬</div>
-                <div><strong>Candy Blast</strong><br><small style="color:#777;">Panga pipi uone utamu</small></div>
-            </div>
+    <div id="shopOverlay" class="overlay">
+        <div class="panel">
+            <img src="https://u.pcloud.link/publink/show?code=XZ3wuE5Z4wx0coiPGGVJivPTSBqoRSnT0e5k" class="splash-img" alt="WSENDY 3D">
+            <h2 style="color:#00ff00; font-style: italic;">WSENDY ULTRA 3D</h2>
+            <button class="btn-main" id="playBtn">ANZA MBIO 🏁</button>
+            <button class="btn-sec" onclick="showMoreApps()">MICHEZO MINGINE 🎮</button>
+            <button class="btn-sec" onclick="claimDaily()" style="color:#00ff00; border-color:#00ff00;">DAILY BONUS (ADS) 🎁</button>
         </div>
-        <button class="btn-main" onclick="closeApps()" style="background:#cc0000; color:white;">RUDI NYUMA</button>
+    </div>
+
+    <div id="appsOverlay" class="overlay" style="display:none;">
+        <div class="panel">
+            <h2 style="color:gold;">MICEZO MINGINE</h2>
+            <div class="app-item" onclick="openMoreAd()">
+                <div style="font-size:30px">⚽</div>
+                <div><strong>Football Pro</strong><br><small>Mechi kali za mtaani</small></div>
+            </div>
+            <div class="app-item" onclick="openMoreAd()">
+                <div style="font-size:30px">🔫</div>
+                <div><strong>War Zone</strong><br><small>Pigania kijiji chako</small></div>
+            </div>
+            <button class="btn-main" onclick="closeApps()" style="background:#cc0000; color:white;">RUDI NYUMA</button>
+        </div>
     </div>
 </div>
+
+<audio id="carAudio" loop>
+    <source src="https://u.pcloud.link/publink/show?code=XZMOuE5ZfaCbDhEhx9uXY5xBJoVCihqetC87" type="audio/mpeg">
+</audio>
 
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+    const bgVideo = document.getElementById('bgVideo');
+    const carAudio = document.getElementById('carAudio');
     
-    // Ads Links
     const ADS_LINK = "https://oddlystudent.com/tu1ixct1?key=bf9ebe5967e8fa09c93394892db398f0";
     const ADS_LINK_2 = "https://oddlystudent.com/xtf00r92?key=d436ce47c2f2dbf92b6ed9434d9bf01e";
 
@@ -103,30 +104,10 @@
     let active = false, speed = 0, px = 190, frame = 0, score = 0, lives = 3, nitro = 100;
     let entities = [];
 
-    // Audio
-    let aCtx, osc, gain;
-    function playSnd() {
-        aCtx = new (window.AudioContext || window.webkitAudioContext)();
-        osc = aCtx.createOscillator(); gain = aCtx.createGain();
-        osc.type = 'sawtooth'; osc.connect(gain); gain.connect(aCtx.destination);
-        osc.start();
-    }
-
     // App Logic
     window.showMoreApps = () => { document.getElementById('appsOverlay').style.display = 'flex'; };
     window.closeApps = () => { document.getElementById('appsOverlay').style.display = 'none'; };
-    
-    window.claimDaily = () => {
-        openAd();
-        nitro = 100;
-        alert("Hongera! Umepewa Nitro ya bure! ⚡");
-    };
-
-    window.shareGame = () => {
-        openMoreAd();
-        const text = "Nicheze mchezo huu wa ajabu wa 3D! Speed tupu: " + window.location.href;
-        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text));
-    };
+    window.claimDaily = () => { openAd(); nitro = 100; alert("Nitro Imejaa! ⚡"); };
 
     // Controls
     let keys = { l:0, r:0, g:0, b:0, n:0 };
@@ -140,48 +121,77 @@
     function gameLoop() {
         if(!active) return;
         
-        ctx.fillStyle = "#3d2b1f"; ctx.fillRect(0,0,canvas.width, canvas.height); // Canyon
-        ctx.fillStyle = "#222"; ctx.beginPath(); // Road
-        ctx.moveTo(175,0); ctx.lineTo(265,0); ctx.lineTo(440,750); ctx.lineTo(0,750); ctx.fill();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        if(keys.l) px -= 7; if(keys.r) px += 7;
+        // Road Drawing (Perspective)
+        ctx.fillStyle = "rgba(40,40,40,0.8)"; 
+        ctx.beginPath();
+        ctx.moveTo(180, 400); ctx.lineTo(260, 400); 
+        ctx.lineTo(440, 750); ctx.lineTo(0, 750); 
+        ctx.fill();
+
+        // Movement Logic
+        if(keys.l) px -= 6; if(keys.r) px += 6;
         
-        if(keys.n && nitro > 0) { speed = Math.min(speed+1, 35); nitro -= 1.5; }
-        else {
-            if(keys.g) speed = Math.min(speed+0.3, 18);
-            else if(keys.b) speed = Math.max(speed-0.8, 0);
-            else speed = Math.max(speed-0.1, 5);
+        if(keys.n && nitro > 0) { 
+            speed = Math.min(speed + 0.8, 30); 
+            nitro -= 0.5; 
+            ctx.shadowBlur = 20; ctx.shadowColor = "cyan";
+        } else {
+            ctx.shadowBlur = 0;
+            if(keys.g) speed = Math.min(speed + 0.2, 15);
+            else if(keys.b) speed = Math.max(speed - 0.5, 0);
+            else speed = Math.max(speed - 0.1, 4);
         }
 
         // Draw Player
-        ctx.font = "60px Arial"; ctx.fillText("🏍️", px, 620);
+        ctx.font = "60px Arial";
+        ctx.fillText("🏍️", px, 680);
 
-        // Spawn Traffic
-        if(frame % 50 === 0) entities.push({x: 50+Math.random()*300, y: -100, t: Math.random()>0.3 ? "🚘":"🪨"});
+        // Traffic
+        if(frame % 40 === 0) {
+            entities.push({x: 80 + Math.random()*280, y: 380, t: Math.random() > 0.3 ? "🚘" : "🚚", s: 2 + Math.random()*5});
+        }
 
         entities.forEach((e, i) => {
-            e.y += speed * 0.9;
-            ctx.font = "50px Arial"; ctx.fillText(e.t, e.x, e.y);
-            if(e.y > 580 && e.y < 650 && Math.abs(e.x - px) < 45) {
-                lives--; entities.splice(i,1);
-                if(lives <= 0) location.reload();
+            e.y += (speed + e.s);
+            // Perspective scaling
+            let scale = (e.y - 300) / 300;
+            ctx.font = (30 * scale) + "px Arial";
+            ctx.fillText(e.t, e.x, e.y);
+
+            // Collision
+            if(e.y > 640 && e.y < 700 && Math.abs(e.x - px) < 40) {
+                lives--;
+                entities.splice(i, 1);
+                if(lives <= 0) {
+                    alert("Game Over! Score: " + Math.floor(score));
+                    location.reload();
+                }
             }
+            if(e.y > 800) entities.splice(i, 1);
         });
 
+        // Update HUD
         document.getElementById('scoreText').innerText = Math.floor(score += speed/10);
         document.getElementById('nosText').innerText = Math.floor(nitro);
-        if(osc) osc.frequency.setTargetAtTime(50 + (speed * 18), aCtx.currentTime, 0.1);
+        document.getElementById('livesText').innerText = lives;
+        
+        // Dynamic Sound Pitch
+        carAudio.playbackRate = 0.5 + (speed / 15);
 
-        px = Math.max(0, Math.min(390, px));
+        px = Math.max(20, Math.min(360, px));
         frame++;
         requestAnimationFrame(gameLoop);
     }
 
     document.getElementById('playBtn').onclick = () => {
         document.getElementById('shopOverlay').style.display = 'none';
-        active = true; playSnd(); gameLoop();
+        active = true;
+        bgVideo.play();
+        carAudio.play();
+        gameLoop();
     };
-
 </script>
 </body>
 </html>
