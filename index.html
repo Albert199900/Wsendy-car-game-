@@ -3,707 +3,185 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>WSENDY ULTRA 3D - Speed & Adrenaline</title>
+    <title>WSENDY ULTRA 3D - Pro Game Hub</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            user-select: none;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
+        body { background: #000; min-height: 100vh; display: flex; justify-content: center; align-items: center; font-family: 'Segoe UI', sans-serif; overflow: hidden; }
+        
+        .game-world { position: relative; width: 100%; max-width: 480px; height: 100vh; max-height: 850px; border-radius: 40px; box-shadow: 0 0 100px rgba(0, 255, 100, 0.2); overflow: hidden; background: #000; }
+        canvas { display: block; width: 100%; height: 100%; background: #1a1a1a; }
 
-        body {
-            background: radial-gradient(circle at 20% 30%, #0a0f1e, #03060c);
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: 'Segoe UI', 'Arial', system-ui;
-            padding: 16px;
-        }
+        /* HUD */
+        .hud { position: absolute; top: 15px; left: 0; right: 0; display: flex; justify-content: space-around; z-index: 20; pointer-events: none; }
+        .hud-card { background: rgba(0,0,0,0.85); padding: 8px 12px; border-radius: 15px; color: #00ff00; font-weight: bold; border: 1px solid #333; font-size: 11px; }
 
-        .game-world {
-            position: relative;
-            width: 100%;
-            max-width: 500px;
-            margin: 0 auto;
-            border-radius: 36px;
-            box-shadow: 0 30px 40px rgba(0,0,0,0.6), 0 0 0 2px gold inset, 0 0 0 4px rgba(0,0,0,0.3) inset;
-            background: #0f212f;
-        }
+        /* Controls */
+        .controls { position: absolute; bottom: 20px; left: 0; right: 0; display: flex; justify-content: center; gap: 12px; z-index: 30; }
+        .btn { width: 70px; height: 70px; border-radius: 50%; background: rgba(30,30,30,0.95); border: 2px solid #444; color: white; display: flex; justify-content: center; align-items: center; font-size: 24px; box-shadow: 0 6px 0 #000; }
+        .btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #000; border-color: #00ff00; }
+        .btn-nos { background: linear-gradient(#0072ff, #00c6ff); border: none; font-size: 13px; font-weight: bold; animation: pulse 1s infinite; }
+        
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
 
-        canvas {
-            display: block;
-            width: 100%;
-            height: auto;
-            border-radius: 32px;
-            cursor: pointer;
-            background: #1c3e2d;
-        }
+        /* Menus */
+        .overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.98); z-index: 1000; display: flex; align-items: center; justify-content: center; text-align: center; color: white; padding: 20px; }
+        .panel { background: #0a0a0a; border: 2px solid #00ff00; border-radius: 35px; padding: 25px; width: 100%; max-width: 400px; max-height: 90vh; overflow-y: auto; }
+        
+        .btn-main { background: #00ff00; color: #000; padding: 16px; border-radius: 15px; width: 100%; font-weight: 800; border: none; font-size: 16px; cursor: pointer; margin-top: 10px; }
+        .btn-sec { background: #333; color: gold; padding: 12px; border-radius: 12px; width: 100%; font-weight: bold; border: 1px solid gold; margin-top: 10px; cursor: pointer; }
 
-        /* HUD ya kisasa */
-        .hud {
-            position: absolute;
-            top: 12px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 16px;
-            z-index: 20;
-            pointer-events: none;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .hud-card {
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(4px);
-            padding: 6px 14px;
-            border-radius: 40px;
-            font-weight: bold;
-            font-size: 13px;
-            border-left: 3px solid gold;
-            border-right: 1px solid rgba(255,215,0,0.4);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            color: #ffd966;
-        }
-
-        .hud-card span {
-            color: white;
-            font-family: monospace;
-            font-size: 16px;
-            font-weight: 800;
-            margin-left: 6px;
-        }
-
-        /* Controls 3D style */
-        .cockpit-controls {
-            position: fixed;
-            bottom: 18px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            z-index: 30;
-            flex-wrap: wrap;
-            padding: 0 12px;
-        }
-
-        .ctrl-3d {
-            background: rgba(0,0,0,0.85);
-            border: none;
-            border-radius: 60px;
-            padding: 12px 20px;
-            font-size: 22px;
-            font-weight: bold;
-            min-width: 85px;
-            text-align: center;
-            backdrop-filter: blur(8px);
-            box-shadow: 0 5px 0 #7f8c8d;
-            transition: 0.05s linear;
-            color: white;
-            cursor: pointer;
-            letter-spacing: 1px;
-        }
-
-        .ctrl-3d:active {
-            transform: translateY(3px);
-            box-shadow: 0 2px 0 #7f8c8d;
-        }
-
-        .ctrl-gas {
-            background: #27ae60;
-            text-shadow: 0 0 3px black;
-            border-bottom: 3px solid #f1c40f;
-        }
-
-        .ctrl-brake {
-            background: #c0392b;
-        }
-
-        /* Overlays premium */
-        .glass-panel {
-            background: rgba(10,20,30,0.96);
-            backdrop-filter: blur(16px);
-            border-radius: 48px;
-            border: 1px solid rgba(255,215,0,0.6);
-            width: 88%;
-            max-width: 360px;
-            text-align: center;
-            padding: 24px 20px;
-            animation: floatIn 0.25s ease;
-        }
-
-        @keyframes floatIn {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .btn-3d {
-            background: linear-gradient(145deg, #e67e22, #f39c12);
-            border: none;
-            padding: 12px;
-            margin: 8px 0;
-            border-radius: 60px;
-            font-weight: bold;
-            font-size: 16px;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.1s linear;
-            color: #1e1e2a;
-            box-shadow: 0 4px 8px black;
-        }
-
-        .btn-3d:active {
-            transform: scale(0.96);
-        }
-
-        .vehicle-preview {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-            margin: 15px 0;
-        }
-
-        .toast-modern {
-            position: fixed;
-            bottom: 110px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #000000cc;
-            backdrop-filter: blur(8px);
-            padding: 8px 18px;
-            border-radius: 40px;
-            color: gold;
-            font-weight: bold;
-            z-index: 200;
-            border-left: 5px solid gold;
-            animation: slideUp 0.2s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; bottom: 80px; }
-            to { opacity: 1; bottom: 110px; }
-        }
-
-        .shake-effect {
-            animation: shakeRoad 0.15s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-        }
-
-        @keyframes shakeRoad {
-            0%,100% { transform: translateX(0); }
-            25% { transform: translateX(-6px); }
-            75% { transform: translateX(6px); }
-        }
+        /* More Apps List */
+        .app-item { background: #151515; border-radius: 15px; padding: 15px; margin: 10px 0; border: 1px solid #333; display: flex; align-items: center; gap: 15px; text-align: left; }
+        .app-icon { font-size: 35px; background: #222; padding: 10px; border-radius: 12px; }
     </style>
 </head>
 <body>
 
 <div class="game-world">
-    <canvas id="gameCanvas" width="420" height="580"></canvas>
+    <canvas id="gameCanvas" width="440" height="750"></canvas>
+    
     <div class="hud">
-        <div class="hud-card">🏆 SCORE <span id="scoreDisplay">0</span></div>
-        <div class="hud-card">💰 COINS <span id="coinDisplay">0</span></div>
-        <div class="hud-card">⚡ SPEED <span id="speedKmh">0</span></div>
-        <div class="hud-card">❤️ LIVES <span id="livesDisplay">3</span></div>
+        <div class="hud-card">🏆 <span id="scoreText">0</span></div>
+        <div class="hud-card">⛽ <span id="nosText">100</span>%</div>
+        <div class="hud-card">❤️ <span id="livesText">3</span></div>
+    </div>
+
+    <div class="controls">
+        <div class="btn" id="leftBtn">⬅️</div>
+        <div class="btn" id="brakeBtn">🛑</div>
+        <div class="btn btn-nos" id="nosBtn">NITRO</div>
+        <div class="btn" id="gasBtn">⚡</div>
+        <div class="btn" id="rightBtn">➡️</div>
     </div>
 </div>
 
-<div class="cockpit-controls">
-    <div class="ctrl-3d" id="leftBtn">◀️</div>
-    <div class="ctrl-3d ctrl-gas" id="speedBtn">⚡ ACCEL</div>
-    <div class="ctrl-3d ctrl-brake" id="brakeBtn">🛑 BRAKE</div>
-    <div class="ctrl-3d" id="rightBtn">▶️</div>
+<div id="shopOverlay" class="overlay">
+    <div class="panel">
+        <h1 style="color:#00ff00; font-style: italic; margin-bottom: 20px;">W-MOTO HUB</h1>
+        
+        <button class="btn-main" id="playBtn">🏁 ANZA MBIO</button>
+        <button class="btn-sec" onclick="showMoreApps()">🎮 MICHEZO MINGINE (MORE APPS)</button>
+        <button class="btn-sec" onclick="claimDaily()" style="color:#00ff00; border-color:#00ff00;">🎁 DAILY BONUS (FREE AD)</button>
+        <button class="btn-sec" onclick="shareGame()" style="color:cyan; border-color:cyan;">📲 SHARE NA MARAFIKI</button>
+        
+        <div id="activeCar" style="margin-top:20px; font-size:14px;">Gari: <span style="color:gold" id="carName">SUV RED</span></div>
+    </div>
 </div>
 
-<!-- START MENU -->
-<div id="startOverlay" class="overlay" style="position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.95); z-index:1000; display: flex; align-items: center; justify-content: center;">
-    <div class="glass-panel">
-        <h1 style="color:gold; font-size: 28px; margin-bottom:8px;">🚦 WSENDY ULTRA</h1>
-        <p style="color:#bbb;">🏎️ Magari & Pikipiki halisi | Mlima mikali</p>
-        <div style="margin: 16px 0;">
-            <button class="btn-3d" id="startBtn">🏁 ANZA MBIO</button>
-            <button class="btn-3d" id="shopMainBtn">🛍️ SHOP (Magari/Piki)</button>
-            <button class="btn-3d" id="rewardsMainBtn">🎁 SHARE/REWARDS</button>
+<div id="appsOverlay" class="overlay" style="display:none;">
+    <div class="panel">
+        <h2 style="color:gold;">MICHEZO MINGINE</h2>
+        <div style="margin: 15px 0;">
+            <div class="app-item" onclick="openMoreAd()">
+                <div class="app-icon">⚽</div>
+                <div><strong>Football Pro</strong><br><small style="color:#777;">Cheza soka la kisasa</small></div>
+            </div>
+            <div class="app-item" onclick="openMoreAd()">
+                <div class="app-icon">🔫</div>
+                <div><strong>War Zone</strong><br><small style="color:#777;">Pigania amani hapa</small></div>
+            </div>
+            <div class="app-item" onclick="openMoreAd()">
+                <div class="app-icon">🍬</div>
+                <div><strong>Candy Blast</strong><br><small style="color:#777;">Panga pipi uone utamu</small></div>
+            </div>
         </div>
-        <div style="font-size:12px; color:#aaa;">BMW · Ferrari · Hayabusa · R6</div>
-    </div>
-</div>
-
-<!-- SHOP MENU (vehicles) -->
-<div id="shopOverlay" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.96); z-index:1100; align-items: center; justify-content: center;">
-    <div class="glass-panel">
-        <h2 style="color:gold;">🏪 DUKA LA MAGARI</h2>
-        <p>💰 <span id="shopCoinVal">0</span> coins</p>
-        <div style="max-height: 280px; overflow-y: auto; margin: 10px 0;">
-            <button class="btn-3d" style="background:#e74c3c;" id="buyRed">🚗 BMW M3 - BURE</button>
-            <button class="btn-3d" style="background:#2c3e70;" id="buyBlue">🏎️ Ferrari F8 - 2500💰</button>
-            <button class="btn-3d" style="background:#d4af37; color:#1e1e1e;" id="buyGold">🌟 Mercedes AMG - 6000💰</button>
-            <button class="btn-3d" style="background:#8e44ad;" id="buyBike1">🏍️ Hayabusa - 4000💰</button>
-            <button class="btn-3d" style="background:#e67e22;" id="buyBike2">🏍️ Yamaha R6 - 4500💰</button>
-            <button class="btn-3d" style="background:#2ecc71;" id="buyShieldItem">🛡️ SHIELD (15sec) - 1000💰</button>
-            <button class="btn-3d" style="background:#f1c40f; color:#000;" id="buyLifeItem">❤️ NYONGEZA LIFE - 500💰</button>
-        </div>
-        <button class="btn-3d" id="closeShopBtn">FUNGA</button>
-    </div>
-</div>
-
-<!-- REWARDS & SHARE MENU -->
-<div id="rewardsOverlay" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.96); z-index:1100; align-items: center; justify-content: center;">
-    <div class="glass-panel">
-        <h2 style="color:gold;">🎁 SHARE & REWARDS</h2>
-        <button class="btn-3d" id="adCoinsBtn">📺 TAZAMA TANGAZO (+600💰)</button>
-        <button class="btn-3d" id="adLifeBtn">❤️ TAZAMA TANGAZO (+1 Life)</button>
-        <button class="btn-3d" id="shareGameBtn">🔗 SHARE GAME (Link copy)</button>
-        <button class="btn-3d" id="closeRewardsBtn">FUNGA</button>
-        <div style="margin-top:12px; font-size:11px;">shiriki na marafiki upate zawadi</div>
-    </div>
-</div>
-
-<!-- GAME OVER MENU -->
-<div id="gameOverOverlay" style="display: none; position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.97); z-index:1200; align-items: center; justify-content: center;">
-    <div class="glass-panel">
-        <h1 style="color:#e67e22;">💀 GAME OVER</h1>
-        <h2 id="finalScoreVal" style="color: gold;">Score: 0</h2>
-        <button class="btn-3d" id="reviveAdBtn">📺 TAZAMA TANGAZO (KUHUISHA)</button>
-        <button class="btn-3d" id="restartBtn">🔄 ANZA MPYA</button>
-        <button class="btn-3d" id="menuBackBtn">🏠 MENU KUU</button>
+        <button class="btn-main" onclick="closeApps()" style="background:#cc0000; color:white;">RUDI NYUMA</button>
     </div>
 </div>
 
 <script>
-    // -------------------- ADSTERRA & SHARE LINKS --------------------
-    const AD_LINK_1 = "https://omg10.com/4/10897169";
-    const AD_LINK_2 = "https://omg10.com/4/10897168";
-    function openAdLink() {
-        let url = Math.random() > 0.5 ? AD_LINK_1 : AD_LINK_2;
-        window.open(url, '_blank');
-    }
-    function shareGameLink() {
-        let shareText = `🚗🔥 Nacheza WSENDY ULTRA - mchezo wa 3D wa magari na pikipiki! Jiunge na upate zama za kusisimua: ${window.location.href}`;
-        if(navigator.share) navigator.share({title:'WSENDY CAR', text:shareText}).catch(()=>copyToClipboard(shareText));
-        else copyToClipboard(shareText);
-        showToast("🔗 Kiungo kimenakiliwa! Shukrani.", true);
-    }
-    function copyToClipboard(text) { navigator.clipboard.writeText(text); }
-
-    function showToast(msg, good=true) {
-        let t = document.createElement('div');
-        t.className = 'toast-modern';
-        t.innerText = msg;
-        t.style.background = good ? '#1e2a1ecc' : '#5a1e1ecc';
-        t.style.borderLeftColor = good ? '#2ecc71' : '#e74c3c';
-        document.body.appendChild(t);
-        setTimeout(()=> t.remove(), 2200);
-    }
-    // ----------------------------------------------------------------
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    let gameActive = false;
-    let animFrame;
-    // Game data
-    let score = 0;
-    let coins = parseInt(localStorage.getItem("wsendyCoinsTotal")) || 0;
-    let lives = 3;
-    let currentVehicle = localStorage.getItem("wsendyVehicle") || "red";
-    let ownedCars = { blue: false, gold: false, hayabusa: false, r6: false };
-    if(localStorage.getItem("ownedBlue")==='true') ownedCars.blue=true;
-    if(localStorage.getItem("ownedGold")==='true') ownedCars.gold=true;
-    if(localStorage.getItem("ownedHayabusa")==='true') ownedCars.hayabusa=true;
-    if(localStorage.getItem("ownedR6")==='true') ownedCars.r6=true;
     
-    let shieldActive = false;
-    let shieldEndTime = 0;
+    // Ads Links
+    const ADS_LINK = "https://oddlystudent.com/tu1ixct1?key=bf9ebe5967e8fa09c93394892db398f0";
+    const ADS_LINK_2 = "https://oddlystudent.com/xtf00r92?key=d436ce47c2f2dbf92b6ed9434d9bf01e";
+
+    function openAd() { window.open(ADS_LINK, '_blank'); }
+    function openMoreAd() { window.open(ADS_LINK_2, '_blank'); }
+
+    let active = false, speed = 0, px = 190, frame = 0, score = 0, lives = 3, nitro = 100;
+    let entities = [];
+
+    // Audio
+    let aCtx, osc, gain;
+    function playSnd() {
+        aCtx = new (window.AudioContext || window.webkitAudioContext)();
+        osc = aCtx.createOscillator(); gain = aCtx.createGain();
+        osc.type = 'sawtooth'; osc.connect(gain); gain.connect(aCtx.destination);
+        osc.start();
+    }
+
+    // App Logic
+    window.showMoreApps = () => { document.getElementById('appsOverlay').style.display = 'flex'; };
+    window.closeApps = () => { document.getElementById('appsOverlay').style.display = 'none'; };
     
-    // vehicle styles + sounds (simulated realistic)
-    const vehiclesData = {
-        red: { name:"BMW M3", color:"#e34234", icon:"🚗", sound:"vroom_v8"},
-        blue: { name:"Ferrari F8", color:"#3a6ea5", icon:"🏎️", sound:"ferrari_howl"},
-        gold: { name:"Mercedes AMG", color:"#f7b32b", icon:"🌟", sound:"amg_roar"},
-        hayabusa: { name:"Hayabusa", color:"#b87333", icon:"🏍️", sound:"hayabusa_whistle"},
-        r6: { name:"Yamaha R6", color:"#2c7a47", icon:"🏍️", sound:"r6_scream"}
+    window.claimDaily = () => {
+        openAd();
+        nitro = 100;
+        alert("Hongera! Umepewa Nitro ya bure! ⚡");
     };
-    
-    // Player
-    let player = { x: 190, y: 500, width: 38, height: 38 };
-    let obstacles = [];
-    let powerups = [];
-    let frameCounter = 0;
-    let baseSpeed = 3.2;
-    let currentGameSpeed = baseSpeed;
-    let leftHold=false, rightHold=false, gasHold=false, brakeHold=false;
-    
-    // Road mountains effect (3D illusion)
-    let mountainOffset = 0;
-    
-    function updateUI() {
-        document.getElementById('scoreDisplay').innerText = Math.floor(score);
-        document.getElementById('coinDisplay').innerText = coins;
-        document.getElementById('speedKmh').innerText = Math.floor(currentGameSpeed * 18);
-        document.getElementById('livesDisplay').innerText = lives;
-        if(document.getElementById('shopCoinVal')) document.getElementById('shopCoinVal').innerText = coins;
-        localStorage.setItem("wsendyCoinsTotal", coins);
-    }
-    
-    function spawnObstacle() {
-        let w = 28 + Math.random() * 22;
-        obstacles.push({
-            x: Math.random() * (canvas.width - w - 10) + 5,
-            y: -35,
-            w: w,
-            h: 28,
-            type: 'rock'
+
+    window.shareGame = () => {
+        openMoreAd();
+        const text = "Nicheze mchezo huu wa ajabu wa 3D! Speed tupu: " + window.location.href;
+        window.open("https://api.whatsapp.com/send?text=" + encodeURIComponent(text));
+    };
+
+    // Controls
+    let keys = { l:0, r:0, g:0, b:0, n:0 };
+    const listen = (id, k) => {
+        const el = document.getElementById(id);
+        el.ontouchstart = (e) => { e.preventDefault(); keys[k] = 1; };
+        el.ontouchend = () => keys[k] = 0;
+    };
+    listen('leftBtn','l'); listen('rightBtn','r'); listen('gasBtn','g'); listen('brakeBtn','b'); listen('nosBtn','n');
+
+    function gameLoop() {
+        if(!active) return;
+        
+        ctx.fillStyle = "#3d2b1f"; ctx.fillRect(0,0,canvas.width, canvas.height); // Canyon
+        ctx.fillStyle = "#222"; ctx.beginPath(); // Road
+        ctx.moveTo(175,0); ctx.lineTo(265,0); ctx.lineTo(440,750); ctx.lineTo(0,750); ctx.fill();
+
+        if(keys.l) px -= 7; if(keys.r) px += 7;
+        
+        if(keys.n && nitro > 0) { speed = Math.min(speed+1, 35); nitro -= 1.5; }
+        else {
+            if(keys.g) speed = Math.min(speed+0.3, 18);
+            else if(keys.b) speed = Math.max(speed-0.8, 0);
+            else speed = Math.max(speed-0.1, 5);
+        }
+
+        // Draw Player
+        ctx.font = "60px Arial"; ctx.fillText("🏍️", px, 620);
+
+        // Spawn Traffic
+        if(frame % 50 === 0) entities.push({x: 50+Math.random()*300, y: -100, t: Math.random()>0.3 ? "🚘":"🪨"});
+
+        entities.forEach((e, i) => {
+            e.y += speed * 0.9;
+            ctx.font = "50px Arial"; ctx.fillText(e.t, e.x, e.y);
+            if(e.y > 580 && e.y < 650 && Math.abs(e.x - px) < 45) {
+                lives--; entities.splice(i,1);
+                if(lives <= 0) location.reload();
+            }
         });
+
+        document.getElementById('scoreText').innerText = Math.floor(score += speed/10);
+        document.getElementById('nosText').innerText = Math.floor(nitro);
+        if(osc) osc.frequency.setTargetAtTime(50 + (speed * 18), aCtx.currentTime, 0.1);
+
+        px = Math.max(0, Math.min(390, px));
+        frame++;
+        requestAnimationFrame(gameLoop);
     }
-    
-    function spawnCoin() {
-        powerups.push({
-            x: Math.random() * (canvas.width - 22) + 5,
-            y: -20,
-            w: 18,
-            h: 18,
-            type: 'coin'
-        });
-    }
-    
-    function spawnSpecial() {
-        if(Math.random()<0.3 && frameCounter % 80 === 0){
-            powerups.push({
-                x: Math.random() * (canvas.width - 24),
-                y: -25,
-                w: 22,
-                h: 22,
-                type: 'star'
-            });
-        }
-    }
-    
-    function updateGame() {
-        if(!gameActive) return;
-        // speed control
-        if(gasHold && !brakeHold) currentGameSpeed = Math.min(baseSpeed + 4.5, 13.5);
-        else if(brakeHold) currentGameSpeed = Math.max(baseSpeed - 2.2, 2.2);
-        else currentGameSpeed = baseSpeed;
-        
-        // difficulty increase with score
-        baseSpeed = 3.2 + Math.floor(score / 700) * 0.35;
-        baseSpeed = Math.min(baseSpeed, 7.8);
-        
-        // move obstacles
-        for(let i=0;i<obstacles.length;i++){
-            obstacles[i].y += currentGameSpeed;
-            if(obstacles[i].y > canvas.height+50) { obstacles.splice(i,1); i--; }
-        }
-        // move powerups
-        for(let i=0;i<powerups.length;i++){
-            powerups[i].y += currentGameSpeed;
-            if(powerups[i].y > canvas.height+40) { powerups.splice(i,1); i--; }
-        }
-        
-        // COLLISION & COLLECT
-        // coins
-        for(let i=0;i<powerups.length;i++){
-            let p = powerups[i];
-            if(player.x < p.x+p.w && player.x+player.width > p.x && player.y < p.y+p.h && player.y+player.height > p.y){
-                if(p.type === 'coin'){
-                    coins += 15;
-                    score += 15;
-                    updateUI();
-                    powerups.splice(i,1);
-                    i--;
-                } else if(p.type === 'star'){
-                    coins += 50;
-                    score += 80;
-                    updateUI();
-                    showToast("⭐ BONUS +50 coins!", true);
-                    powerups.splice(i,1);
-                    i--;
-                }
-            }
-        }
-        
-        // obstacle collision
-        for(let i=0;i<obstacles.length;i++){
-            let o=obstacles[i];
-            if(player.x < o.x+o.w && player.x+player.width > o.x && player.y < o.y+o.h && player.y+player.height > o.y){
-                if(shieldActive && Date.now() < shieldEndTime){
-                    obstacles.splice(i,1);
-                    showToast("🛡️ SHIELD imekukinga!", true);
-                    i--;
-                } else {
-                    lives--;
-                    updateUI();
-                    showToast(`💥 Ajali! Life -1`, false);
-                    canvas.classList.add('shake-effect');
-                    setTimeout(()=> canvas.classList.remove('shake-effect'), 200);
-                    obstacles.splice(i,1);
-                    if(lives <= 0){
-                        gameActive = false;
-                        document.getElementById('finalScoreVal').innerHTML = `Score: ${Math.floor(score)}`;
-                        document.getElementById('gameOverOverlay').style.display = 'flex';
-                        cancelAnimationFrame(animFrame);
-                    }
-                    break;
-                }
-            }
-        }
-        
-        score += 0.35;
-        updateUI();
-        
-        // spawn dynamic
-        if(frameCounter % 42 === 0) spawnObstacle();
-        if(frameCounter % 28 === 0) spawnCoin();
-        if(frameCounter % 180 === 0) spawnSpecial();
-        frameCounter++;
-    }
-    
-    function movePlayer(){
-        if(leftHold && player.x > 8) player.x -= 5.5;
-        if(rightHold && player.x+player.width < canvas.width-8) player.x += 5.5;
-        player.x = Math.min(Math.max(player.x, 8), canvas.width-player.width-8);
-    }
-    
-    // DRAW 3D-like road + mountains
-    function drawRoad3D(){
-        ctx.fillStyle = "#1f2c1b";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        // road asphalt with perspective lines
-        ctx.fillStyle = "#232323";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.fillStyle = "#2c2c2c";
-        for(let i=0;i<4;i++) ctx.fillRect(i*100,0,60,canvas.height);
-        ctx.beginPath();
-        ctx.strokeStyle = "#f5bc42";
-        ctx.lineWidth = 5;
-        for(let i=-2;i<12;i++){
-            let offset = (frameCounter*0.5 + i*45) % 120;
-            ctx.beginPath();
-            ctx.moveTo(canvas.width/2 + 15*Math.sin(offset*0.05), (i*60 + offset)%canvas.height);
-            ctx.lineTo(canvas.width/2 - 15*Math.sin(offset*0.05), (i*60 + offset + 40)%canvas.height);
-            ctx.stroke();
-        }
-        // milima mikali (mountain edges)
-        ctx.fillStyle = "#3a5e3a";
-        for(let m=0; m<3; m++){
-            let xOff = m*140 + mountainOffset;
-            ctx.beginPath();
-            ctx.moveTo(xOff%canvas.width, canvas.height-40);
-            ctx.lineTo((xOff+60)%canvas.width, canvas.height-110);
-            ctx.lineTo((xOff+120)%canvas.width, canvas.height-30);
-            ctx.fill();
-        }
-        ctx.fillStyle = "#5b8c5a";
-        for(let m=0; m<3; m++){
-            let xOff = 80 + m*130 + mountainOffset*0.7;
-            ctx.beginPath();
-            ctx.moveTo(xOff%canvas.width, canvas.height-70);
-            ctx.lineTo((xOff+45)%canvas.width, canvas.height-140);
-            ctx.lineTo((xOff+90)%canvas.width, canvas.height-60);
-            ctx.fill();
-        }
-        mountainOffset = (mountainOffset + 0.8) % 300;
-    }
-    
-    function drawObstacles(){
-        for(let o of obstacles){
-            ctx.fillStyle = "#5c3e1f";
-            ctx.shadowBlur = 8;
-            ctx.fillRect(o.x, o.y, o.w, o.h);
-            ctx.fillStyle = "#3c2a1a";
-            ctx.fillRect(o.x+4, o.y+5, o.w-8, 8);
-            ctx.fillStyle = "#b87c4f";
-            ctx.fillRect(o.x+o.w/3, o.y+12, 6, 12);
-        }
-    }
-    
-    function drawPowerups(){
-        for(let p of powerups){
-            if(p.type === 'coin'){
-                ctx.fillStyle = "#f1c40f";
-                ctx.beginPath();
-                ctx.arc(p.x+p.w/2, p.y+p.h/2, p.w/2, 0, 2*Math.PI);
-                ctx.fill();
-                ctx.fillStyle = "#d4ac0d";
-                ctx.font = "14px Arial";
-                ctx.fillText("💰", p.x+2, p.y+14);
-            } else if(p.type === 'star'){
-                ctx.fillStyle = "#e67e22";
-                ctx.fillRect(p.x, p.y, p.w, p.h);
-                ctx.fillStyle = "gold";
-                ctx.font = "16px monospace";
-                ctx.fillText("⭐", p.x+3, p.y+16);
-            }
-        }
-        ctx.shadowBlur = 0;
-    }
-    
-    function drawPlayer(){
-        let v = vehiclesData[currentVehicle] || vehiclesData.red;
-        ctx.shadowBlur = 12;
-        ctx.shadowColor = "gold";
-        ctx.fillStyle = v.color;
-        ctx.beginPath();
-        if(currentVehicle.includes('bike') || currentVehicle === 'hayabusa' || currentVehicle === 'r6'){
-            ctx.fillRect(player.x+8, player.y, 22, 30);
-            ctx.fillRect(player.x+2, player.y+8, 34, 14);
-            ctx.fillStyle = "#333";
-            ctx.fillRect(player.x+12, player.y-4, 14, 8);
-        } else {
-            ctx.fillRect(player.x+5, player.y+6, 28, 26);
-            ctx.fillRect(player.x+12, player.y+2, 14, 12);
-            ctx.fillStyle = "#222";
-            ctx.fillRect(player.x+6, player.y+22, 8, 10);
-            ctx.fillRect(player.x+24, player.y+22, 8, 10);
-        }
-        ctx.fillStyle = "#ffcc44";
-        ctx.beginPath();
-        ctx.arc(player.x+player.width-6, player.y+8, 6, 0, Math.PI*2);
-        ctx.fill();
-        ctx.fillStyle = "white";
-        ctx.font = "bold 16px 'Segoe UI'";
-        ctx.fillText(v.icon, player.x+12, player.y+28);
-        ctx.shadowBlur = 0;
-    }
-    
-    function drawSpeedGlow(){
-        let speedPercent = currentGameSpeed/13;
-        ctx.globalAlpha = 0.1 + speedPercent*0.2;
-        ctx.fillStyle = "orange";
-        ctx.fillRect(0,0,canvas.width,canvas.height);
-        ctx.globalAlpha = 1;
-    }
-    
-    function gameRender(){
-        if(!gameActive) return;
-        drawRoad3D();
-        drawObstacles();
-        drawPowerups();
-        drawPlayer();
-        drawSpeedGlow();
-        // UI live speed text
-        ctx.font = "bold 12px monospace";
-        ctx.fillStyle = "white";
-        ctx.shadowBlur = 0;
-        ctx.fillText(`${vehiclesData[currentVehicle].name} | ${Math.floor(currentGameSpeed*18)} km/h`, 15, 40);
-    }
-    
-    function gameLoop(){
-        if(!gameActive) return;
-        movePlayer();
-        updateGame();
-        gameRender();
-        animFrame = requestAnimationFrame(gameLoop);
-    }
-    
-    function startNewGame(){
-        gameActive = true;
-        score = 0;
-        lives = 3;
-        obstacles = [];
-        powerups = [];
-        frameCounter = 0;
-        baseSpeed = 3.2;
-        currentGameSpeed = baseSpeed;
-        shieldActive = false;
-        player.x = canvas.width/2 - player.width/2;
-        updateUI();
-        document.getElementById('gameOverOverlay').style.display = 'none';
-        document.getElementById('startOverlay').style.display = 'none';
-        if(animFrame) cancelAnimationFrame(animFrame);
-        gameLoop();
-    }
-    
-    function buyVehicle(skin, price, storeKey){
-        if(price===0){
-            currentVehicle = skin;
-            localStorage.setItem("wsendyVehicle",skin);
-            showToast(`${vehiclesData[skin].name} imechaguliwa!`,true);
-            document.getElementById('shopOverlay').style.display='none';
-            return true;
-        }
-        if(coins >= price && !ownedCars[storeKey]){
-            coins -= price;
-            ownedCars[storeKey]=true;
-            localStorage.setItem(`owned${storeKey.charAt(0).toUpperCase()+storeKey.slice(1)}`, "true");
-            currentVehicle = skin;
-            localStorage.setItem("wsendyVehicle",skin);
-            updateUI();
-            showToast(`🏁 Umepata ${vehiclesData[skin].name}!`,true);
-            document.getElementById('shopOverlay').style.display='none';
-            return true;
-        } else if(ownedCars[storeKey]){
-            currentVehicle = skin;
-            localStorage.setItem("wsendyVehicle",skin);
-            showToast(`Gari limebadilishwa → ${vehiclesData[skin].name}`,true);
-            document.getElementById('shopOverlay').style.display='none';
-            return true;
-        } else {
-            showToast("Coins hazitoshi au tayari umenunua?", false);
-            return false;
-        }
-    }
-    
-    function buyShieldGame(){
-        if(coins>=1000){
-            coins-=1000;
-            shieldActive=true;
-            shieldEndTime=Date.now()+15000;
-            updateUI();
-            showToast("🛡️ Ngao ya kinga (15sec)!",true);
-            document.getElementById('shopOverlay').style.display='none';
-        } else showToast("Hauna coins za kutosha!",false);
-    }
-    function buyLifeGame(){
-        if(coins>=500){
-            coins-=500;
-            lives++;
-            updateUI();
-            showToast("❤️ +1 Life!",true);
-            document.getElementById('shopOverlay').style.display='none';
-        } else showToast("Coins hazitoshi!",false);
-    }
-    
-    // ----- EVENT LISTENERS -----
-    document.getElementById('startBtn').onclick = ()=> startNewGame();
-    document.getElementById('shopMainBtn').onclick = ()=> { document.getElementById('startOverlay').style.display='none'; document.getElementById('shopOverlay').style.display='flex'; updateUI(); };
-    document.getElementById('rewardsMainBtn').onclick = ()=> { document.getElementById('startOverlay').style.display='none'; document.getElementById('rewardsOverlay').style.display='flex'; };
-    document.getElementById('closeShopBtn').onclick = ()=> { document.getElementById('shopOverlay').style.display='none'; document.getElementById('startOverlay').style.display='flex'; };
-    document.getElementById('closeRewardsBtn').onclick = ()=> { document.getElementById('rewardsOverlay').style.display='none'; document.getElementById('startOverlay').style.display='flex'; };
-    document.getElementById('restartBtn').onclick = ()=> { document.getElementById('gameOverOverlay').style.display='none'; startNewGame(); };
-    document.getElementById('menuBackBtn').onclick = ()=> { document.getElementById('gameOverOverlay').style.display='none'; document.getElementById('startOverlay').style.display='flex'; gameActive=false; };
-    document.getElementById('reviveAdBtn').onclick = ()=> { openAdLink(); setTimeout(()=>{ if(lives<=0){ lives=2; gameActive=true; document.getElementById('gameOverOverlay').style.display='none'; gameLoop(); showToast("Umefufuliwa!",true);} },2000); };
-    document.getElementById('adCoinsBtn').onclick = ()=> { openAdLink(); setTimeout(()=>{ coins+=600; updateUI(); showToast("+600 coins!",true); },2500); };
-    document.getElementById('adLifeBtn').onclick = ()=> { openAdLink(); setTimeout(()=>{ lives++; updateUI(); showToast("❤️ +1 Life!",true); },2500); };
-    document.getElementById('shareGameBtn').onclick = ()=> shareGameLink();
-    
-    // vehicle buys
-    document.getElementById('buyRed').onclick = ()=> buyVehicle('red',0,'red');
-    document.getElementById('buyBlue').onclick = ()=> buyVehicle('blue',2500,'blue');
-    document.getElementById('buyGold').onclick = ()=> buyVehicle('gold',6000,'gold');
-    document.getElementById('buyBike1').onclick = ()=> buyVehicle('hayabusa',4000,'hayabusa');
-    document.getElementById('buyBike2').onclick = ()=> buyVehicle('r6',4500,'r6');
-    document.getElementById('buyShieldItem').onclick = ()=> buyShieldGame();
-    document.getElementById('buyLifeItem').onclick = ()=> buyLifeGame();
-    
-    // controls
-    document.getElementById('leftBtn').addEventListener('mousedown',()=> leftHold=true); document.getElementById('leftBtn').addEventListener('mouseup',()=> leftHold=false);
-    document.getElementById('rightBtn').addEventListener('mousedown',()=> rightHold=true); document.getElementById('rightBtn').addEventListener('mouseup',()=> rightHold=false);
-    document.getElementById('speedBtn').addEventListener('mousedown',()=> gasHold=true); document.getElementById('speedBtn').addEventListener('mouseup',()=> gasHold=false);
-    document.getElementById('brakeBtn').addEventListener('mousedown',()=> brakeHold=true); document.getElementById('brakeBtn').addEventListener('mouseup',()=> brakeHold=false);
-    ['touchstart','touchend'].forEach(ev=>{
-        document.getElementById('leftBtn').addEventListener(ev, e=>{ e.preventDefault(); if(ev==='touchstart') leftHold=true; else leftHold=false;});
-        document.getElementById('rightBtn').addEventListener(ev, e=>{ e.preventDefault(); if(ev==='touchstart') rightHold=true; else rightHold=false;});
-        document.getElementById('speedBtn').addEventListener(ev, e=>{ e.preventDefault(); if(ev==='touchstart') gasHold=true; else gasHold=false;});
-        document.getElementById('brakeBtn').addEventListener(ev, e=>{ e.preventDefault(); if(ev==='touchstart') brakeHold=true; else brakeHold=false;});
-    });
-    document.addEventListener('keydown',(e)=>{ if(e.key==='ArrowLeft') leftHold=true; if(e.key==='ArrowRight') rightHold=true; if(e.key==='ArrowUp') gasHold=true; if(e.key==='ArrowDown') brakeHold=true; });
-    document.addEventListener('keyup',(e)=>{ if(e.key==='ArrowLeft') leftHold=false; if(e.key==='ArrowRight') rightHold=false; if(e.key==='ArrowUp') gasHold=false; if(e.key==='ArrowDown') brakeHold=false; });
-    
-    updateUI();
+
+    document.getElementById('playBtn').onclick = () => {
+        document.getElementById('shopOverlay').style.display = 'none';
+        active = true; playSnd(); gameLoop();
+    };
+
 </script>
 </body>
 </html>
