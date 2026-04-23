@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Mchezo wa Gari - 3D na Sauti</title>
+<meta name="description" content="Jaribu uwezo wako wa kuendesha gari kwa kasi na kukwepa vikwazo. Mchezo wa mbio za magari uliotengenezwa kwa teknolojia ya kisasa ya web na Albert199900.">
+<meta name="keywords" content="Wsendy Car Game, Racing Game Tanzania, Web Racing, Albert199900, Michezo ya Magari">
+<meta name="author" content="Albert199900">
+
+<meta property="og:title" content="Wsendy Car Game">
+<meta property="og:description" content="Cheza mchezo wa magari wenye kasi na sauti halisi!">
+<meta property="og:image" content="picha_ya_game_yako.png">
+    
 <style>
 body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, sans-serif; touch-action: none; }
 
@@ -392,5 +400,15 @@ function animate() {
     });
 }
 </script>
+    <script>
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js')
+        .then(reg => console.log('Wsendy Game: Tayari kwa Offline!'))
+        .catch(err => console.log('Imefeli kidogo:', err));
+    });
+  }
+    </script>
+    
 </body>
 </html>
